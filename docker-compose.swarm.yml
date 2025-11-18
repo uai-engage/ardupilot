@@ -6,13 +6,24 @@ version: '3.8'
 # with different vehicle types simultaneously (e.g., 2 copters, 1 plane, 1 VTOL)
 #
 # Usage:
-#   docker-compose -f docker-compose.swarm.yml up --build
+#   cp .env.swarm.example .env.swarm
+#   docker-compose -f docker-compose.swarm.yml --env-file .env.swarm up --build
 #
-# Each instance gets offset ports:
-#   Instance 0: MAVLink 5760, SITL 5501, DDS 2019
-#   Instance 1: MAVLink 5770, SITL 5511, DDS 2029
-#   Instance 2: MAVLink 5780, SITL 5521, DDS 2039
-#   etc.
+# Key Features:
+# - SINGLE DDS PORT (2019): All vehicles connect to same Micro ROS Agent
+# - Unique SYSID: Each vehicle differentiated by System ID (1, 2, 3, 4)
+# - Unique MAVLink Ports: Each instance gets offset by 10 * instance number
+# - Different Spawn Locations: Configure HOME positions in .env.swarm
+#
+# Port Allocation:
+#   Instance 0: MAVLink 5760, SITL 5501, Shared DDS 2019, SYSID 1
+#   Instance 1: MAVLink 5770, SITL 5511, Shared DDS 2019, SYSID 2
+#   Instance 2: MAVLink 5780, SITL 5521, Shared DDS 2019, SYSID 3
+#   Instance 3: MAVLink 5790, SITL 5531, Shared DDS 2019, SYSID 4
+#
+# ROS2 Connection:
+#   Run ONE Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p 2019
+#   All vehicles connect to it, differentiated by their SYSID parameter
 
 services:
   # Copter 1 - Quadcopter
@@ -51,9 +62,10 @@ services:
       - HOME_LOCATION=${COPTER1_HOME:-}
 
       # DDS/ROS2 Configuration
+      # All vehicles share the SAME DDS port (differentiated by SYSID)
       - ENABLE_DDS=${ENABLE_DDS:-1}
       - DDS_ENABLE=1
-      - DDS_UDP_PORT=2019  # Instance 0 port
+      - DDS_UDP_PORT=${DDS_UDP_PORT:-2019}
       - DDS_IP0=${DDS_IP0:-127}
       - DDS_IP1=${DDS_IP1:-0}
       - DDS_IP2=${DDS_IP2:-0}
@@ -84,7 +96,7 @@ services:
         echo "LOG_DISARMED 1" >> $$PARAM_FILE
         echo "LOG_BACKEND_TYPE 1" >> $$PARAM_FILE
         echo "DDS_ENABLE 1" >> $$PARAM_FILE
-        echo "DDS_UDP_PORT 2019" >> $$PARAM_FILE
+        echo "DDS_UDP_PORT $${DDS_UDP_PORT}" >> $$PARAM_FILE
         echo "DDS_IP0 $${DDS_IP0}" >> $$PARAM_FILE
         echo "DDS_IP1 $${DDS_IP1}" >> $$PARAM_FILE
         echo "DDS_IP2 $${DDS_IP2}" >> $$PARAM_FILE
@@ -149,9 +161,10 @@ services:
       - SIM_ADDRESS=${SIM_ADDRESS:-127.0.0.1}
       - WIPE=${WIPE:-0}
       - HOME_LOCATION=${COPTER2_HOME:-}
+      # All vehicles share the SAME DDS port (differentiated by SYSID)
       - ENABLE_DDS=${ENABLE_DDS:-1}
       - DDS_ENABLE=1
-      - DDS_UDP_PORT=2029  # Instance 1 port (2019 + 10)
+      - DDS_UDP_PORT=${DDS_UDP_PORT:-2019}
       - DDS_IP0=${DDS_IP0:-127}
       - DDS_IP1=${DDS_IP1:-0}
       - DDS_IP2=${DDS_IP2:-0}
@@ -177,7 +190,7 @@ services:
         echo "LOG_DISARMED 1" >> $$PARAM_FILE
         echo "LOG_BACKEND_TYPE 1" >> $$PARAM_FILE
         echo "DDS_ENABLE 1" >> $$PARAM_FILE
-        echo "DDS_UDP_PORT 2029" >> $$PARAM_FILE
+        echo "DDS_UDP_PORT $${DDS_UDP_PORT}" >> $$PARAM_FILE
         echo "DDS_IP0 $${DDS_IP0}" >> $$PARAM_FILE
         echo "DDS_IP1 $${DDS_IP1}" >> $$PARAM_FILE
         echo "DDS_IP2 $${DDS_IP2}" >> $$PARAM_FILE
@@ -229,9 +242,10 @@ services:
       - SIM_ADDRESS=${SIM_ADDRESS:-127.0.0.1}
       - WIPE=${WIPE:-0}
       - HOME_LOCATION=${PLANE1_HOME:-}
+      # All vehicles share the SAME DDS port (differentiated by SYSID)
       - ENABLE_DDS=${ENABLE_DDS:-1}
       - DDS_ENABLE=1
-      - DDS_UDP_PORT=2039  # Instance 2 port (2019 + 20)
+      - DDS_UDP_PORT=${DDS_UDP_PORT:-2019}
       - DDS_IP0=${DDS_IP0:-127}
       - DDS_IP1=${DDS_IP1:-0}
       - DDS_IP2=${DDS_IP2:-0}
@@ -258,7 +272,7 @@ services:
         echo "LOG_DISARMED 1" >> $$PARAM_FILE
         echo "LOG_BACKEND_TYPE 1" >> $$PARAM_FILE
         echo "DDS_ENABLE 1" >> $$PARAM_FILE
-        echo "DDS_UDP_PORT 2039" >> $$PARAM_FILE
+        echo "DDS_UDP_PORT $${DDS_UDP_PORT}" >> $$PARAM_FILE
         echo "DDS_IP0 $${DDS_IP0}" >> $$PARAM_FILE
         echo "DDS_IP1 $${DDS_IP1}" >> $$PARAM_FILE
         echo "DDS_IP2 $${DDS_IP2}" >> $$PARAM_FILE
@@ -317,9 +331,10 @@ services:
       - SIM_ADDRESS=${SIM_ADDRESS:-127.0.0.1}
       - WIPE=${WIPE:-0}
       - HOME_LOCATION=${VTOL1_HOME:-}
+      # All vehicles share the SAME DDS port (differentiated by SYSID)
       - ENABLE_DDS=${ENABLE_DDS:-1}
       - DDS_ENABLE=1
-      - DDS_UDP_PORT=2049  # Instance 3 port (2019 + 30)
+      - DDS_UDP_PORT=${DDS_UDP_PORT:-2019}
       - DDS_IP0=${DDS_IP0:-127}
       - DDS_IP1=${DDS_IP1:-0}
       - DDS_IP2=${DDS_IP2:-0}
@@ -345,7 +360,7 @@ services:
         echo "LOG_DISARMED 1" >> $$PARAM_FILE
         echo "LOG_BACKEND_TYPE 1" >> $$PARAM_FILE
         echo "DDS_ENABLE 1" >> $$PARAM_FILE
-        echo "DDS_UDP_PORT 2049" >> $$PARAM_FILE
+        echo "DDS_UDP_PORT $${DDS_UDP_PORT}" >> $$PARAM_FILE
         echo "DDS_IP0 $${DDS_IP0}" >> $$PARAM_FILE
         echo "DDS_IP1 $${DDS_IP1}" >> $$PARAM_FILE
         echo "DDS_IP2 $${DDS_IP2}" >> $$PARAM_FILE
