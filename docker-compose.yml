@@ -232,6 +232,15 @@ services:
         echo "Running: $$SIM_CMD"
         echo ""
 
+        # Start log tailing in background to show logs in docker-compose output
+        touch /tmp/ArduCopter.log
+        ln -sf /tmp/ArduCopter.log /ardupilot/logs/ArduCopter.log
+        tail -f /tmp/ArduCopter.log &
+        TAIL_PID=$$!
+
+        # Trap to ensure tail process is killed on exit
+        trap "kill $$TAIL_PID 2>/dev/null || true" EXIT INT TERM
+
         exec $$SIM_CMD
 
 volumes:
