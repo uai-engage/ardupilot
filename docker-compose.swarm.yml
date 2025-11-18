@@ -1,0 +1,378 @@
+version: '3.8'
+
+# ArduPilot Multi-Vehicle Swarm Configuration
+# =============================================
+# This docker-compose file allows running multiple ArduPilot SITL instances
+# with different vehicle types simultaneously (e.g., 2 copters, 1 plane, 1 VTOL)
+#
+# Usage:
+#   docker-compose -f docker-compose.swarm.yml up --build
+#
+# Each instance gets offset ports:
+#   Instance 0: MAVLink 5760, SITL 5501, DDS 2019
+#   Instance 1: MAVLink 5770, SITL 5511, DDS 2029
+#   Instance 2: MAVLink 5780, SITL 5521, DDS 2039
+#   etc.
+
+services:
+  # Copter 1 - Quadcopter
+  copter-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: ubuntu
+        TAG: "22.04"
+        SKIP_AP_GRAPHIC_ENV: 1
+        SKIP_AP_EXT_ENV: 0
+        SKIP_AP_COV_ENV: 1
+        SKIP_AP_GIT_CHECK: 1
+        DO_AP_STM_ENV: 0
+    container_name: ardupilot-copter-1
+    network_mode: host
+    working_dir: /ardupilot
+    volumes:
+      - .:/ardupilot
+      - ./logs:/tmp/buildlogs
+      - ./sitl_logs/copter-1:/ardupilot/logs
+      - copter-1-eeprom:/ardupilot/eeprom
+    environment:
+      # Vehicle Configuration
+      - VEHICLE=ArduCopter
+      - MODEL=${COPTER1_MODEL:-quad}
+      - INSTANCE=0
+      - SYSID=${COPTER1_SYSID:-1}
+
+      # Simulation Options
+      - SPEEDUP=${SPEEDUP:-1}
+      - SIM_ADDRESS=${SIM_ADDRESS:-127.0.0.1}
+      - WIPE=${WIPE:-0}
+      - SYNTHETIC_CLOCK=${SYNTHETIC_CLOCK:-0}
+      - HOME_LOCATION=${COPTER1_HOME:-}
+
+      # DDS/ROS2 Configuration
+      - ENABLE_DDS=${ENABLE_DDS:-1}
+      - DDS_ENABLE=1
+      - DDS_UDP_PORT=2019  # Instance 0 port
+      - DDS_IP0=${DDS_IP0:-127}
+      - DDS_IP1=${DDS_IP1:-0}
+      - DDS_IP2=${DDS_IP2:-0}
+      - DDS_IP3=${DDS_IP3:-1}
+      - DDS_DOMAIN_ID=${DDS_DOMAIN_ID:-0}
+      - DDS_TIMEOUT_MS=${DDS_TIMEOUT_MS:-1000}
+      - DDS_MAX_RETRY=${DDS_MAX_RETRY:-10}
+
+      # Build Options
+      - SKIP_BUILD=0
+      - BUILD_TARGET=sitl
+      - MAVPROXY_ENABLED=0
+    command:
+      - |
+        set -e
+        source /home/ardupilot/.ardupilot_env
+
+        echo "========================================="
+        echo "ArduPilot Copter 1 (Instance 0)"
+        echo "MAVLink: 5760, SITL: 5501, DDS: 2019"
+        echo "========================================="
+
+        mkdir -p /ardupilot/logs
+        chmod 777 /ardupilot/logs
+
+        PARAM_FILE="/tmp/copter1_params.parm"
+        echo "# Copter 1 Parameters" > $$PARAM_FILE
+        echo "LOG_DISARMED 1" >> $$PARAM_FILE
+        echo "LOG_BACKEND_TYPE 1" >> $$PARAM_FILE
+        echo "DDS_ENABLE 1" >> $$PARAM_FILE
+        echo "DDS_UDP_PORT 2019" >> $$PARAM_FILE
+        echo "DDS_IP0 $${DDS_IP0}" >> $$PARAM_FILE
+        echo "DDS_IP1 $${DDS_IP1}" >> $$PARAM_FILE
+        echo "DDS_IP2 $${DDS_IP2}" >> $$PARAM_FILE
+        echo "DDS_IP3 $${DDS_IP3}" >> $$PARAM_FILE
+        echo "DDS_DOMAIN_ID $${DDS_DOMAIN_ID}" >> $$PARAM_FILE
+        echo "SYSID_THISMAV $${SYSID}" >> $$PARAM_FILE
+
+        cd /ardupilot
+
+        if [ "$$SKIP_BUILD" != "1" ]; then
+          echo "Building ArduCopter..."
+          git submodule update --init --recursive 2>/dev/null || true
+          ./waf configure --board sitl --enable-DDS || (sleep 2 && ./waf configure --board sitl --enable-DDS)
+          ./waf copter
+        fi
+
+        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduCopter --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
+
+        if [ -n "$${HOME_LOCATION}" ]; then
+          SIM_CMD="$$SIM_CMD --home $${HOME_LOCATION}"
+        fi
+
+        if [ "$${WIPE}" = "1" ]; then
+          SIM_CMD="$$SIM_CMD -w"
+        fi
+
+        touch /tmp/ArduCopter-0.log
+        ln -sf /tmp/ArduCopter-0.log /ardupilot/logs/ArduCopter.log
+        tail -f /tmp/ArduCopter-0.log &
+        TAIL_PID=$$!
+        trap "kill $$TAIL_PID 2>/dev/null || true" EXIT INT TERM
+
+        exec $$SIM_CMD
+
+  # Copter 2 - Hexacopter
+  copter-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: ubuntu
+        TAG: "22.04"
+        SKIP_AP_GRAPHIC_ENV: 1
+        SKIP_AP_EXT_ENV: 0
+        SKIP_AP_COV_ENV: 1
+        SKIP_AP_GIT_CHECK: 1
+        DO_AP_STM_ENV: 0
+    container_name: ardupilot-copter-2
+    network_mode: host
+    working_dir: /ardupilot
+    volumes:
+      - .:/ardupilot
+      - ./logs:/tmp/buildlogs
+      - ./sitl_logs/copter-2:/ardupilot/logs
+      - copter-2-eeprom:/ardupilot/eeprom
+    environment:
+      - VEHICLE=ArduCopter
+      - MODEL=${COPTER2_MODEL:-hexa}
+      - INSTANCE=1
+      - SYSID=${COPTER2_SYSID:-2}
+      - SPEEDUP=${SPEEDUP:-1}
+      - SIM_ADDRESS=${SIM_ADDRESS:-127.0.0.1}
+      - WIPE=${WIPE:-0}
+      - HOME_LOCATION=${COPTER2_HOME:-}
+      - ENABLE_DDS=${ENABLE_DDS:-1}
+      - DDS_ENABLE=1
+      - DDS_UDP_PORT=2029  # Instance 1 port (2019 + 10)
+      - DDS_IP0=${DDS_IP0:-127}
+      - DDS_IP1=${DDS_IP1:-0}
+      - DDS_IP2=${DDS_IP2:-0}
+      - DDS_IP3=${DDS_IP3:-1}
+      - DDS_DOMAIN_ID=${DDS_DOMAIN_ID:-0}
+      - SKIP_BUILD=1  # Reuse build from copter-1
+    depends_on:
+      - copter-1
+    command:
+      - |
+        set -e
+        source /home/ardupilot/.ardupilot_env
+
+        echo "========================================="
+        echo "ArduPilot Copter 2 (Instance 1)"
+        echo "MAVLink: 5770, SITL: 5511, DDS: 2029"
+        echo "========================================="
+
+        mkdir -p /ardupilot/logs
+
+        PARAM_FILE="/tmp/copter2_params.parm"
+        echo "# Copter 2 Parameters" > $$PARAM_FILE
+        echo "LOG_DISARMED 1" >> $$PARAM_FILE
+        echo "LOG_BACKEND_TYPE 1" >> $$PARAM_FILE
+        echo "DDS_ENABLE 1" >> $$PARAM_FILE
+        echo "DDS_UDP_PORT 2029" >> $$PARAM_FILE
+        echo "DDS_IP0 $${DDS_IP0}" >> $$PARAM_FILE
+        echo "DDS_IP1 $${DDS_IP1}" >> $$PARAM_FILE
+        echo "DDS_IP2 $${DDS_IP2}" >> $$PARAM_FILE
+        echo "DDS_IP3 $${DDS_IP3}" >> $$PARAM_FILE
+        echo "DDS_DOMAIN_ID $${DDS_DOMAIN_ID}" >> $$PARAM_FILE
+        echo "SYSID_THISMAV $${SYSID}" >> $$PARAM_FILE
+
+        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduCopter --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
+
+        if [ -n "$${HOME_LOCATION}" ]; then
+          SIM_CMD="$$SIM_CMD --home $${HOME_LOCATION}"
+        fi
+
+        touch /tmp/ArduCopter-1.log
+        ln -sf /tmp/ArduCopter-1.log /ardupilot/logs/ArduCopter.log
+        tail -f /tmp/ArduCopter-1.log &
+        TAIL_PID=$$!
+        trap "kill $$TAIL_PID 2>/dev/null || true" EXIT INT TERM
+
+        exec $$SIM_CMD
+
+  # Plane - Fixed Wing
+  plane-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: ubuntu
+        TAG: "22.04"
+        SKIP_AP_GRAPHIC_ENV: 1
+        SKIP_AP_EXT_ENV: 0
+        SKIP_AP_COV_ENV: 1
+        SKIP_AP_GIT_CHECK: 1
+        DO_AP_STM_ENV: 0
+    container_name: ardupilot-plane-1
+    network_mode: host
+    working_dir: /ardupilot
+    volumes:
+      - .:/ardupilot
+      - ./logs:/tmp/buildlogs
+      - ./sitl_logs/plane-1:/ardupilot/logs
+      - plane-1-eeprom:/ardupilot/eeprom
+    environment:
+      - VEHICLE=ArduPlane
+      - MODEL=${PLANE1_MODEL:-plane}
+      - INSTANCE=2
+      - SYSID=${PLANE1_SYSID:-3}
+      - SPEEDUP=${SPEEDUP:-1}
+      - SIM_ADDRESS=${SIM_ADDRESS:-127.0.0.1}
+      - WIPE=${WIPE:-0}
+      - HOME_LOCATION=${PLANE1_HOME:-}
+      - ENABLE_DDS=${ENABLE_DDS:-1}
+      - DDS_ENABLE=1
+      - DDS_UDP_PORT=2039  # Instance 2 port (2019 + 20)
+      - DDS_IP0=${DDS_IP0:-127}
+      - DDS_IP1=${DDS_IP1:-0}
+      - DDS_IP2=${DDS_IP2:-0}
+      - DDS_IP3=${DDS_IP3:-1}
+      - DDS_DOMAIN_ID=${DDS_DOMAIN_ID:-0}
+      - SKIP_BUILD=0
+      - BUILD_TARGET=sitl
+    depends_on:
+      - copter-1
+    command:
+      - |
+        set -e
+        source /home/ardupilot/.ardupilot_env
+
+        echo "========================================="
+        echo "ArduPilot Plane 1 (Instance 2)"
+        echo "MAVLink: 5780, SITL: 5521, DDS: 2039"
+        echo "========================================="
+
+        mkdir -p /ardupilot/logs
+
+        PARAM_FILE="/tmp/plane1_params.parm"
+        echo "# Plane 1 Parameters" > $$PARAM_FILE
+        echo "LOG_DISARMED 1" >> $$PARAM_FILE
+        echo "LOG_BACKEND_TYPE 1" >> $$PARAM_FILE
+        echo "DDS_ENABLE 1" >> $$PARAM_FILE
+        echo "DDS_UDP_PORT 2039" >> $$PARAM_FILE
+        echo "DDS_IP0 $${DDS_IP0}" >> $$PARAM_FILE
+        echo "DDS_IP1 $${DDS_IP1}" >> $$PARAM_FILE
+        echo "DDS_IP2 $${DDS_IP2}" >> $$PARAM_FILE
+        echo "DDS_IP3 $${DDS_IP3}" >> $$PARAM_FILE
+        echo "DDS_DOMAIN_ID $${DDS_DOMAIN_ID}" >> $$PARAM_FILE
+        echo "SYSID_THISMAV $${SYSID}" >> $$PARAM_FILE
+
+        cd /ardupilot
+
+        echo "Building ArduPlane..."
+        git submodule update --init --recursive 2>/dev/null || true
+        ./waf configure --board sitl --enable-DDS || (sleep 2 && ./waf configure --board sitl --enable-DDS)
+        ./waf plane
+
+        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
+
+        if [ -n "$${HOME_LOCATION}" ]; then
+          SIM_CMD="$$SIM_CMD --home $${HOME_LOCATION}"
+        fi
+
+        touch /tmp/ArduPlane-2.log
+        ln -sf /tmp/ArduPlane-2.log /ardupilot/logs/ArduPlane.log
+        tail -f /tmp/ArduPlane-2.log &
+        TAIL_PID=$$!
+        trap "kill $$TAIL_PID 2>/dev/null || true" EXIT INT TERM
+
+        exec $$SIM_CMD
+
+  # VTOL - QuadPlane
+  vtol-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: ubuntu
+        TAG: "22.04"
+        SKIP_AP_GRAPHIC_ENV: 1
+        SKIP_AP_EXT_ENV: 0
+        SKIP_AP_COV_ENV: 1
+        SKIP_AP_GIT_CHECK: 1
+        DO_AP_STM_ENV: 0
+    container_name: ardupilot-vtol-1
+    network_mode: host
+    working_dir: /ardupilot
+    volumes:
+      - .:/ardupilot
+      - ./logs:/tmp/buildlogs
+      - ./sitl_logs/vtol-1:/ardupilot/logs
+      - vtol-1-eeprom:/ardupilot/eeprom
+    environment:
+      - VEHICLE=ArduPlane
+      - MODEL=${VTOL1_MODEL:-quadplane}
+      - INSTANCE=3
+      - SYSID=${VTOL1_SYSID:-4}
+      - SPEEDUP=${SPEEDUP:-1}
+      - SIM_ADDRESS=${SIM_ADDRESS:-127.0.0.1}
+      - WIPE=${WIPE:-0}
+      - HOME_LOCATION=${VTOL1_HOME:-}
+      - ENABLE_DDS=${ENABLE_DDS:-1}
+      - DDS_ENABLE=1
+      - DDS_UDP_PORT=2049  # Instance 3 port (2019 + 30)
+      - DDS_IP0=${DDS_IP0:-127}
+      - DDS_IP1=${DDS_IP1:-0}
+      - DDS_IP2=${DDS_IP2:-0}
+      - DDS_IP3=${DDS_IP3:-1}
+      - DDS_DOMAIN_ID=${DDS_DOMAIN_ID:-0}
+      - SKIP_BUILD=1  # Reuse plane build
+    depends_on:
+      - plane-1
+    command:
+      - |
+        set -e
+        source /home/ardupilot/.ardupilot_env
+
+        echo "========================================="
+        echo "ArduPilot VTOL 1 (Instance 3)"
+        echo "MAVLink: 5790, SITL: 5531, DDS: 2049"
+        echo "========================================="
+
+        mkdir -p /ardupilot/logs
+
+        PARAM_FILE="/tmp/vtol1_params.parm"
+        echo "# VTOL 1 Parameters" > $$PARAM_FILE
+        echo "LOG_DISARMED 1" >> $$PARAM_FILE
+        echo "LOG_BACKEND_TYPE 1" >> $$PARAM_FILE
+        echo "DDS_ENABLE 1" >> $$PARAM_FILE
+        echo "DDS_UDP_PORT 2049" >> $$PARAM_FILE
+        echo "DDS_IP0 $${DDS_IP0}" >> $$PARAM_FILE
+        echo "DDS_IP1 $${DDS_IP1}" >> $$PARAM_FILE
+        echo "DDS_IP2 $${DDS_IP2}" >> $$PARAM_FILE
+        echo "DDS_IP3 $${DDS_IP3}" >> $$PARAM_FILE
+        echo "DDS_DOMAIN_ID $${DDS_DOMAIN_ID}" >> $$PARAM_FILE
+        echo "SYSID_THISMAV $${SYSID}" >> $$PARAM_FILE
+
+        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
+
+        if [ -n "$${HOME_LOCATION}" ]; then
+          SIM_CMD="$$SIM_CMD --home $${HOME_LOCATION}"
+        fi
+
+        touch /tmp/ArduPlane-3.log
+        ln -sf /tmp/ArduPlane-3.log /ardupilot/logs/ArduPlane.log
+        tail -f /tmp/ArduPlane-3.log &
+        TAIL_PID=$$!
+        trap "kill $$TAIL_PID 2>/dev/null || true" EXIT INT TERM
+
+        exec $$SIM_CMD
+
+volumes:
+  copter-1-eeprom:
+    driver: local
+  copter-2-eeprom:
+    driver: local
+  plane-1-eeprom:
+    driver: local
+  vtol-1-eeprom:
+    driver: local
