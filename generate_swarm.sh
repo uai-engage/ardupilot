@@ -328,7 +328,7 @@ EOF
         SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduCopter --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
 
         if [ -n "$${HOME_LOCATION}" ]; then
-          SIM_CMD="$$SIM_CMD --home $${HOME_LOCATION}"
+          SIM_CMD="$$SIM_CMD -L $${HOME_LOCATION}"
         fi
 
         if [ "$${WIPE}" = "1" ]; then
@@ -460,7 +460,7 @@ EOF
         SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
 
         if [ -n "$${HOME_LOCATION}" ]; then
-          SIM_CMD="$$SIM_CMD --home $${HOME_LOCATION}"
+          SIM_CMD="$$SIM_CMD -L $${HOME_LOCATION}"
         fi
 
         if [ "$${WIPE}" = "1" ]; then
@@ -591,7 +591,7 @@ EOF
         SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
 
         if [ -n "$${HOME_LOCATION}" ]; then
-          SIM_CMD="$$SIM_CMD --home $${HOME_LOCATION}"
+          SIM_CMD="$$SIM_CMD -L $${HOME_LOCATION}"
         fi
 
         if [ "$${WIPE}" = "1" ]; then
