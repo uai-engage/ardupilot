@@ -314,8 +314,17 @@ EOF
 EOF
 
     cat >> "$OUTPUT_COMPOSE" << EOF
-        echo "ArduPilot Copter $i (Instance $INSTANCE)"
-        echo "MAVLink: $MAVLINK_PORT, SITL: $SITL_PORT, DDS: $DDS_PORT"
+        echo "ArduPilot Copter $i (Instance $INSTANCE, SYSID $SYSID)"
+        echo "-----------------------------------------"
+        echo "PORT ASSIGNMENTS:"
+        echo "  MAVLink:  $MAVLINK_PORT (TCP) - For Mission Planner/GCS"
+        echo "  SITL:     $SITL_PORT (UDP) - For external simulator"
+        echo "  DDS:      $DDS_PORT (UDP) - For ROS2 communication"
+        echo "  MAVProxy: $((14550 + INSTANCE)) (UDP) - For telemetry output"
+        echo ""
+        echo "CONNECTIONS:"
+        echo "  Mission Planner: tcp:127.0.0.1:$MAVLINK_PORT"
+        echo "  ROS2 Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
     cat >> "$OUTPUT_COMPOSE" << 'EOF'
@@ -457,8 +466,17 @@ EOF
 EOF
 
     cat >> "$OUTPUT_COMPOSE" << EOF
-        echo "ArduPilot Plane $i (Instance $INSTANCE)"
-        echo "MAVLink: $MAVLINK_PORT, SITL: $SITL_PORT, DDS: $DDS_PORT"
+        echo "ArduPilot Plane $i (Instance $INSTANCE, SYSID $SYSID)"
+        echo "-----------------------------------------"
+        echo "PORT ASSIGNMENTS:"
+        echo "  MAVLink:  $MAVLINK_PORT (TCP) - For Mission Planner/GCS"
+        echo "  SITL:     $SITL_PORT (UDP) - For external simulator"
+        echo "  DDS:      $DDS_PORT (UDP) - For ROS2 communication"
+        echo "  MAVProxy: $((14550 + INSTANCE)) (UDP) - For telemetry output"
+        echo ""
+        echo "CONNECTIONS:"
+        echo "  Mission Planner: tcp:127.0.0.1:$MAVLINK_PORT"
+        echo "  ROS2 Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
     cat >> "$OUTPUT_COMPOSE" << 'EOF'
@@ -599,8 +617,17 @@ EOF
 EOF
 
     cat >> "$OUTPUT_COMPOSE" << EOF
-        echo "ArduPilot VTOL $i (Instance $INSTANCE)"
-        echo "MAVLink: $MAVLINK_PORT, SITL: $SITL_PORT, DDS: $DDS_PORT"
+        echo "ArduPilot VTOL $i (Instance $INSTANCE, SYSID $SYSID)"
+        echo "-----------------------------------------"
+        echo "PORT ASSIGNMENTS:"
+        echo "  MAVLink:  $MAVLINK_PORT (TCP) - For Mission Planner/GCS"
+        echo "  SITL:     $SITL_PORT (UDP) - For external simulator"
+        echo "  DDS:      $DDS_PORT (UDP) - For ROS2 communication"
+        echo "  MAVProxy: $((14550 + INSTANCE)) (UDP) - For telemetry output"
+        echo ""
+        echo "CONNECTIONS:"
+        echo "  Mission Planner: tcp:127.0.0.1:$MAVLINK_PORT"
+        echo "  ROS2 Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
     cat >> "$OUTPUT_COMPOSE" << 'EOF'
