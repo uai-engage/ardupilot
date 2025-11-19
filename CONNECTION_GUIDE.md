@@ -151,6 +151,328 @@ ros2 topic echo /vehicle_3/ap/attitude/quaternion
 
 ---
 
+## 2B. Alternative: Connecting ROS2 via MAVROS2
+
+### Connection Method: MAVROS2 (MAVLink-ROS2 Bridge)
+
+**Purpose**: Alternative to Micro ROS Agent - connects ROS2 to ArduPilot using MAVLink protocol
+
+**Key Difference**:
+- **Micro ROS Agent**: Uses DDS protocol (port 2019+), ArduPilot acts as DDS client
+- **MAVROS2**: Uses MAVLink protocol (port 5760+), connects to existing MAVLink port
+
+### When to Use MAVROS2 vs Micro ROS Agent:
+
+| Feature | Micro ROS Agent (DDS) | MAVROS2 (MAVLink) |
+|---------|----------------------|-------------------|
+| **Protocol** | DDS/XRCE-DDS | MAVLink |
+| **Connection** | Dedicated DDS port | Existing MAVLink port |
+| **Setup** | Requires Micro ROS Agent running | Requires MAVROS2 package installed |
+| **Topics** | Native ArduPilot DDS topics | Standard MAVROS topics |
+| **Maturity** | Newer (experimental) | Mature, well-tested |
+| **Performance** | Lower overhead | Slightly higher overhead |
+| **Use Case** | Modern DDS-based systems | Traditional ROS/MAVLink workflows |
+
+### Installation:
+
+**Install MAVROS2** (if not already installed):
+
+```bash
+# Install from apt (ROS2 Humble)
+sudo apt install ros-humble-mavros ros-humble-mavros-extras
+
+# Install GeographicLib datasets (required)
+wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh
+sudo bash ./install_geographiclib_datasets.sh
+```
+
+### Configuration for Multi-Vehicle:
+
+MAVROS2 uses **launch files** to configure each vehicle connection.
+
+#### Example 1: Single Vehicle (Copter 1)
+
+**Create**: `~/ros2_ws/src/ardupilot_mavros/launch/copter1.launch.py`
+
+```python
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+    return LaunchDescription([
+        Node(
+            package='mavros',
+            executable='mavros_node',
+            name='mavros_copter1',
+            namespace='copter1',
+            parameters=[{
+                'fcu_url': 'tcp://127.0.0.1:5760@',
+                'gcs_url': '',
+                'target_system_id': 1,
+                'target_component_id': 1,
+                'fcu_protocol': 'v2.0',
+            }],
+            output='screen',
+        ),
+    ])
+```
+
+**Launch**:
+```bash
+source /opt/ros/humble/setup.bash
+ros2 launch ardupilot_mavros copter1.launch.py
+```
+
+#### Example 2: Multi-Vehicle Setup (2 Copters)
+
+**Create**: `~/ros2_ws/src/ardupilot_mavros/launch/multi_vehicle.launch.py`
+
+```python
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+    return LaunchDescription([
+        # Copter 1
+        Node(
+            package='mavros',
+            executable='mavros_node',
+            name='mavros_copter1',
+            namespace='copter1',
+            parameters=[{
+                'fcu_url': 'tcp://127.0.0.1:5760@',
+                'target_system_id': 1,
+                'target_component_id': 1,
+                'fcu_protocol': 'v2.0',
+            }],
+            output='screen',
+        ),
+        # Copter 2
+        Node(
+            package='mavros',
+            executable='mavros_node',
+            name='mavros_copter2',
+            namespace='copter2',
+            parameters=[{
+                'fcu_url': 'tcp://127.0.0.1:5770@',
+                'target_system_id': 2,
+                'target_component_id': 1,
+                'fcu_protocol': 'v2.0',
+            }],
+            output='screen',
+        ),
+    ])
+```
+
+**Launch**:
+```bash
+ros2 launch ardupilot_mavros multi_vehicle.launch.py
+```
+
+### Quick Launch (Without Launch File):
+
+**Copter 1**:
+```bash
+ros2 run mavros mavros_node --ros-args \
+  -r __ns:=/copter1 \
+  -p fcu_url:=tcp://127.0.0.1:5760@ \
+  -p target_system_id:=1
+```
+
+**Copter 2**:
+```bash
+ros2 run mavros mavros_node --ros-args \
+  -r __ns:=/copter2 \
+  -p fcu_url:=tcp://127.0.0.1:5770@ \
+  -p target_system_id:=2
+```
+
+**Plane 1**:
+```bash
+ros2 run mavros mavros_node --ros-args \
+  -r __ns:=/plane1 \
+  -p fcu_url:=tcp://127.0.0.1:5780@ \
+  -p target_system_id:=3
+```
+
+### Port Configuration for MAVROS2:
+
+| Vehicle | Instance | SYSID | MAVLink Port | MAVROS2 Connection |
+|---------|----------|-------|--------------|-------------------|
+| Copter 1 | 0 | 1 | 5760 | `tcp://127.0.0.1:5760@` |
+| Copter 2 | 1 | 2 | 5770 | `tcp://127.0.0.1:5770@` |
+| Copter 3 | 2 | 3 | 5780 | `tcp://127.0.0.1:5780@` |
+| Plane 1 | 3 | 4 | 5790 | `tcp://127.0.0.1:5790@` |
+
+**Formula**: `tcp://127.0.0.1:<5760 + Instance × 10>@`
+
+### MAVROS2 Topic Structure:
+
+MAVROS2 publishes to namespaced topics:
+
+```bash
+# List all MAVROS topics
+ros2 topic list
+
+# Expected output:
+/copter1/mavros/state
+/copter1/mavros/global_position/global
+/copter1/mavros/imu/data
+/copter2/mavros/state
+/copter2/mavros/global_position/global
+/copter2/mavros/imu/data
+```
+
+### Common MAVROS2 Topics:
+
+| Topic | Type | Description |
+|-------|------|-------------|
+| `/copter1/mavros/state` | `mavros_msgs/State` | Vehicle connection state |
+| `/copter1/mavros/global_position/global` | `sensor_msgs/NavSatFix` | GPS position |
+| `/copter1/mavros/imu/data` | `sensor_msgs/Imu` | IMU data |
+| `/copter1/mavros/local_position/pose` | `geometry_msgs/PoseStamped` | Local position |
+| `/copter1/mavros/battery` | `sensor_msgs/BatteryState` | Battery status |
+| `/copter1/mavros/rc/in` | `mavros_msgs/RCIn` | RC inputs |
+
+### Subscribe to MAVROS2 Topics:
+
+```bash
+# Copter 1 GPS position
+ros2 topic echo /copter1/mavros/global_position/global
+
+# Copter 2 IMU data
+ros2 topic echo /copter2/mavros/imu/data
+
+# Plane 1 state
+ros2 topic echo /plane1/mavros/state
+```
+
+### Sending Commands via MAVROS2:
+
+**Arm Vehicle**:
+```bash
+ros2 service call /copter1/mavros/cmd/arming \
+  mavros_msgs/srv/CommandBool \
+  "{value: true}"
+```
+
+**Set Mode**:
+```bash
+ros2 service call /copter1/mavros/set_mode \
+  mavros_msgs/srv/SetMode \
+  "{custom_mode: 'GUIDED'}"
+```
+
+**Takeoff**:
+```bash
+ros2 service call /copter1/mavros/cmd/takeoff \
+  mavros_msgs/srv/CommandTOL \
+  "{altitude: 10.0}"
+```
+
+### Comparison: Micro ROS Agent vs MAVROS2 Topics
+
+| Data | Micro ROS Agent (DDS) | MAVROS2 (MAVLink) |
+|------|----------------------|-------------------|
+| GPS | `/vehicle_1/navsat/fix` | `/copter1/mavros/global_position/global` |
+| IMU | `/vehicle_1/ap/imu/experimental/data` | `/copter1/mavros/imu/data` |
+| Battery | `/vehicle_1/ap/battery/battery0` | `/copter1/mavros/battery` |
+| State | `/vehicle_1/ap/mode` | `/copter1/mavros/state` |
+
+### Complete Multi-Vehicle Example with MAVROS2:
+
+**Scenario**: 2 Copters with MAVROS2
+
+**Terminal 1 - Start Docker Swarm**:
+```bash
+docker compose -f docker-compose-generated.yml --env-file .env.generated up
+```
+
+**Terminal 2 - Start MAVROS2 for Copter 1**:
+```bash
+source /opt/ros/humble/setup.bash
+ros2 run mavros mavros_node --ros-args \
+  -r __ns:=/copter1 \
+  -p fcu_url:=tcp://127.0.0.1:5760@ \
+  -p target_system_id:=1
+```
+
+**Terminal 3 - Start MAVROS2 for Copter 2**:
+```bash
+source /opt/ros/humble/setup.bash
+ros2 run mavros mavros_node --ros-args \
+  -r __ns:=/copter2 \
+  -p fcu_url:=tcp://127.0.0.1:5770@ \
+  -p target_system_id:=2
+```
+
+**Terminal 4 - Monitor Topics**:
+```bash
+# List all topics
+ros2 topic list
+
+# Monitor Copter 1 GPS
+ros2 topic echo /copter1/mavros/global_position/global
+
+# Monitor Copter 2 state
+ros2 topic echo /copter2/mavros/state
+```
+
+### Using Both Micro ROS Agent AND MAVROS2:
+
+You **can** use both simultaneously if needed:
+
+**Configuration**:
+- **Micro ROS Agent**: Connects to DDS ports (2019, 2020, 2021...)
+- **MAVROS2**: Connects to MAVLink ports (5760, 5770, 5780...)
+
+**Example Setup**:
+
+**Terminal 1 - Docker**:
+```bash
+docker compose -f docker-compose-generated.yml --env-file .env.generated up
+```
+
+**Terminal 2 - Micro ROS Agent (Copter 1)**:
+```bash
+ros2 run micro_ros_agent micro_ros_agent udp4 -p 2019
+```
+
+**Terminal 3 - MAVROS2 (Copter 1)**:
+```bash
+ros2 run mavros mavros_node --ros-args \
+  -r __ns:=/copter1 \
+  -p fcu_url:=tcp://127.0.0.1:5760@ \
+  -p target_system_id:=1
+```
+
+**Result**: You'll have BOTH sets of topics available:
+- DDS topics: `/vehicle_1/*`
+- MAVROS topics: `/copter1/mavros/*`
+
+**Use Case**: Use DDS for high-frequency data (IMU, attitude) and MAVROS2 for commands/services (arm, takeoff, set_mode).
+
+### Choosing Between Micro ROS Agent and MAVROS2:
+
+**Use Micro ROS Agent (DDS) when**:
+- You want native ArduPilot DDS integration
+- Lower latency is critical
+- You're building new DDS-based systems
+- You need high-frequency sensor data
+
+**Use MAVROS2 (MAVLink) when**:
+- You have existing MAVROS/ROS1 code to port
+- You need mature, well-documented ROS integration
+- You want standard MAVROS topics/services
+- You're integrating with existing MAVLink-based tools
+
+**Use Both when**:
+- You need both DDS and MAVLink capabilities
+- You want DDS for data and MAVROS for commands
+- You're transitioning from MAVROS to DDS gradually
+
+---
+
 ## 3. Connecting External Simulator (SITL Port)
 
 ### Connection Method: UDP
@@ -238,9 +560,11 @@ COPTER2_MAVPROXY_ENABLED=0
 
 ---
 
-## Complete Connection Example
+## Complete Connection Examples
 
-### Scenario: 2 Copters with Mission Planner and ROS2
+### Example 1: Using Micro ROS Agent (DDS)
+
+**Scenario**: 2 Copters with Mission Planner and ROS2 via Micro ROS Agent
 
 **Terminal 1 - Start ROS2 Agent for Copter 1**:
 ```bash
@@ -274,11 +598,96 @@ Connection: tcp:127.0.0.1:5770
 # List all topics
 ros2 topic list
 
-# Echo Copter 1 GPS
+# Echo Copter 1 GPS (DDS topics)
 ros2 topic echo /vehicle_1/navsat/fix
 
-# Echo Copter 2 GPS
+# Echo Copter 2 GPS (DDS topics)
 ros2 topic echo /vehicle_2/navsat/fix
+```
+
+---
+
+### Example 2: Using MAVROS2 (MAVLink)
+
+**Scenario**: 2 Copters with Mission Planner and ROS2 via MAVROS2
+
+**Terminal 1 - Start Docker Swarm**:
+```bash
+docker compose -f docker-compose-generated.yml --env-file .env.generated up
+```
+
+**Terminal 2 - Start MAVROS2 for Copter 1**:
+```bash
+source /opt/ros/humble/setup.bash
+ros2 run mavros mavros_node --ros-args \
+  -r __ns:=/copter1 \
+  -p fcu_url:=tcp://127.0.0.1:5760@ \
+  -p target_system_id:=1
+```
+
+**Terminal 3 - Start MAVROS2 for Copter 2**:
+```bash
+source /opt/ros/humble/setup.bash
+ros2 run mavros mavros_node --ros-args \
+  -r __ns:=/copter2 \
+  -p fcu_url:=tcp://127.0.0.1:5770@ \
+  -p target_system_id:=2
+```
+
+**Mission Planner**: You can still connect Mission Planner to the same MAVLink ports, but MAVROS2 will also be connected. Both can share the connection.
+
+**Terminal 4 - Monitor ROS2 Topics**:
+```bash
+# List all topics
+ros2 topic list
+
+# Echo Copter 1 GPS (MAVROS topics)
+ros2 topic echo /copter1/mavros/global_position/global
+
+# Echo Copter 2 GPS (MAVROS topics)
+ros2 topic echo /copter2/mavros/global_position/global
+
+# Arm Copter 1 via MAVROS service
+ros2 service call /copter1/mavros/cmd/arming mavros_msgs/srv/CommandBool "{value: true}"
+```
+
+---
+
+### Example 3: Using Both (Hybrid Approach)
+
+**Scenario**: Use DDS for high-frequency data and MAVROS2 for commands
+
+**Terminal 1 - Start Docker Swarm**:
+```bash
+docker compose -f docker-compose-generated.yml --env-file .env.generated up
+```
+
+**Terminal 2 - Start Micro ROS Agent (for DDS data)**:
+```bash
+source /opt/ros/humble/setup.bash
+ros2 run micro_ros_agent micro_ros_agent udp4 -p 2019
+```
+
+**Terminal 3 - Start MAVROS2 (for commands/services)**:
+```bash
+source /opt/ros/humble/setup.bash
+ros2 run mavros mavros_node --ros-args \
+  -r __ns:=/copter1 \
+  -p fcu_url:=tcp://127.0.0.1:5760@ \
+  -p target_system_id:=1
+```
+
+**Terminal 4 - Use Both Topic Types**:
+```bash
+# Monitor DDS topics for high-frequency data
+ros2 topic echo /vehicle_1/ap/imu/experimental/data
+
+# Monitor MAVROS topics
+ros2 topic echo /copter1/mavros/state
+
+# Send commands via MAVROS services
+ros2 service call /copter1/mavros/cmd/arming mavros_msgs/srv/CommandBool "{value: true}"
+ros2 service call /copter1/mavros/set_mode mavros_msgs/srv/SetMode "{custom_mode: 'GUIDED'}"
 ```
 
 ---
@@ -374,11 +783,26 @@ sudo kill -9 <PID>
 | What You Want | Use This Port | Protocol | Example Connection |
 |---------------|---------------|----------|-------------------|
 | **Control with Mission Planner** | MAVLink | TCP | `tcp:127.0.0.1:5760` |
-| **Send ROS2 commands/data** | DDS | UDP | `ros2 run micro_ros_agent micro_ros_agent udp4 -p 2019` |
+| **ROS2 via Micro ROS Agent** | DDS | UDP | `ros2 run micro_ros_agent micro_ros_agent udp4 -p 2019` |
+| **ROS2 via MAVROS2** | MAVLink | TCP | `ros2 run mavros mavros_node -p fcu_url:=tcp://127.0.0.1:5760@` |
 | **Connect external simulator** | SITL | UDP | Configure Gazebo to `127.0.0.1:5501` |
 | **Route telemetry with MAVProxy** | MAVProxy OUT | UDP | `mavproxy.py --master=udp:127.0.0.1:14550` |
 
-**Most Common**: You'll primarily use **MAVLink (TCP)** for Mission Planner and **DDS (UDP)** for ROS2.
+**Most Common**: You'll primarily use **MAVLink (TCP)** for Mission Planner and either **DDS (UDP)** or **MAVROS2 (TCP)** for ROS2.
+
+### ROS2 Connection Options:
+
+**Option 1: Micro ROS Agent (DDS)** - Native ArduPilot DDS, lower latency, newer
+```bash
+ros2 run micro_ros_agent micro_ros_agent udp4 -p 2019
+```
+
+**Option 2: MAVROS2 (MAVLink)** - Mature, well-tested, standard ROS topics
+```bash
+ros2 run mavros mavros_node --ros-args -r __ns:=/copter1 -p fcu_url:=tcp://127.0.0.1:5760@
+```
+
+**Option 3: Both** - Use DDS for data and MAVROS2 for commands simultaneously
 
 ---
 
