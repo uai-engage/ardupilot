@@ -186,6 +186,7 @@ services:
         echo "========================================="
 
         mkdir -p /ardupilot/logs
+        chmod 777 /ardupilot/logs
 
         PARAM_FILE="/tmp/copter2_params.parm"
         echo "# Copter 2 Parameters" > $$PARAM_FILE
@@ -269,6 +270,7 @@ services:
         echo "========================================="
 
         mkdir -p /ardupilot/logs
+        chmod 777 /ardupilot/logs
 
         PARAM_FILE="/tmp/plane1_params.parm"
         echo "# Plane 1 Parameters" > $$PARAM_FILE
@@ -358,6 +360,7 @@ services:
         echo "========================================="
 
         mkdir -p /ardupilot/logs
+        chmod 777 /ardupilot/logs
 
         PARAM_FILE="/tmp/vtol1_params.parm"
         echo "# VTOL 1 Parameters" > $$PARAM_FILE
