@@ -160,8 +160,9 @@ COPTER${i}_HOME=$DEFAULT_LAT,$LON_OFFSET,$DEFAULT_ALT,$DEFAULT_HDG
 COPTER${i}_MAVLINK_GCS_PORT=$((5760 + ($i - 1) * 10))
 COPTER${i}_MAVLINK_ROS_PORT=$((5761 + ($i - 1) * 10))
 COPTER${i}_SITL_PORT=$((5501 + ($i - 1) * 10))
-COPTER${i}_MAVPROXY_ENABLED=0
-COPTER${i}_MAVPROXY_OUT=127.0.0.1:$((14550 + ($i - 1)))
+COPTER${i}_MAVPROXY_ENABLED=1
+COPTER${i}_MAVPROXY_OUT=tcpin:0.0.0.0:$((5760 + ($i - 1) * 10)),tcpin:0.0.0.0:$((5761 + ($i - 1) * 10))
+COPTER${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5501 + ($i - 1) * 10))
 EOF
 
     SYSID=$((SYSID + 1))
@@ -183,8 +184,9 @@ PLANE${i}_HOME=$DEFAULT_LAT,$LON_OFFSET,$ALT_OFFSET,$DEFAULT_HDG
 PLANE${i}_MAVLINK_GCS_PORT=$((5760 + ($VEHICLE_NUM - 1) * 10))
 PLANE${i}_MAVLINK_ROS_PORT=$((5761 + ($VEHICLE_NUM - 1) * 10))
 PLANE${i}_SITL_PORT=$((5501 + ($VEHICLE_NUM - 1) * 10))
-PLANE${i}_MAVPROXY_ENABLED=0
-PLANE${i}_MAVPROXY_OUT=127.0.0.1:$((14550 + ($VEHICLE_NUM - 1)))
+PLANE${i}_MAVPROXY_ENABLED=1
+PLANE${i}_MAVPROXY_OUT=tcpin:0.0.0.0:$((5760 + ($VEHICLE_NUM - 1) * 10)),tcpin:0.0.0.0:$((5761 + ($VEHICLE_NUM - 1) * 10))
+PLANE${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5501 + ($VEHICLE_NUM - 1) * 10))
 EOF
 
     SYSID=$((SYSID + 1))
@@ -205,8 +207,9 @@ VTOL${i}_HOME=$DEFAULT_LAT,$LON_OFFSET,$DEFAULT_ALT,$DEFAULT_HDG
 VTOL${i}_MAVLINK_GCS_PORT=$((5760 + ($VEHICLE_NUM - 1) * 10))
 VTOL${i}_MAVLINK_ROS_PORT=$((5761 + ($VEHICLE_NUM - 1) * 10))
 VTOL${i}_SITL_PORT=$((5501 + ($VEHICLE_NUM - 1) * 10))
-VTOL${i}_MAVPROXY_ENABLED=0
-VTOL${i}_MAVPROXY_OUT=127.0.0.1:$((14550 + ($VEHICLE_NUM - 1)))
+VTOL${i}_MAVPROXY_ENABLED=1
+VTOL${i}_MAVPROXY_OUT=tcpin:0.0.0.0:$((5760 + ($VEHICLE_NUM - 1) * 10)),tcpin:0.0.0.0:$((5761 + ($VEHICLE_NUM - 1) * 10))
+VTOL${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5501 + ($VEHICLE_NUM - 1) * 10))
 EOF
 
     SYSID=$((SYSID + 1))
@@ -296,8 +299,9 @@ for ((i=1; i<=NUM_COPTERS; i++)); do
       - MAVLINK_GCS_PORT=\${COPTER${i}_MAVLINK_GCS_PORT:-$MAVLINK_PORT}
       - MAVLINK_ROS_PORT=\${COPTER${i}_MAVLINK_ROS_PORT:-$((MAVLINK_PORT + 1))}
       - SITL_PORT=\${COPTER${i}_SITL_PORT:-$SITL_PORT}
-      - MAVPROXY_ENABLED=\${COPTER${i}_MAVPROXY_ENABLED:-0}
-      - MAVPROXY_OUT=\${COPTER${i}_MAVPROXY_OUT:-127.0.0.1:14550}
+      - MAVPROXY_ENABLED=\${COPTER${i}_MAVPROXY_ENABLED:-1}
+      - MAVPROXY_OUT=\${COPTER${i}_MAVPROXY_OUT:-tcpin:0.0.0.0:$MAVLINK_PORT,tcpin:0.0.0.0:$((MAVLINK_PORT + 1))}
+      - MAVPROXY_MASTER=\${COPTER${i}_MAVPROXY_MASTER:-tcp:127.0.0.1:$SITL_PORT}
 EOF
 
     if [ -n "$DEPENDS_ON" ]; then
@@ -359,11 +363,12 @@ EOF
 
         SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduCopter --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
 
-        if [ "$${MAVPROXY_ENABLED}" = "0" ]; then
-          # Create separate TCP ports for GCS and ROS2 (no MAVProxy) - comma-separated in single --out parameter
-          SIM_CMD="$$SIM_CMD --no-mavproxy --out=tcpin:0.0.0.0:$${MAVLINK_GCS_PORT},tcpin:0.0.0.0:$${MAVLINK_ROS_PORT}"
+        if [ "$${MAVPROXY_ENABLED}" = "1" ]; then
+          # Use MAVProxy to create separate TCP ports for GCS and MAVROS2
+          SIM_CMD="$$SIM_CMD --master=$${MAVPROXY_MASTER} --out=$${MAVPROXY_OUT}"
         else
-          SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
+          # Direct connection without MAVProxy
+          SIM_CMD="$$SIM_CMD --no-mavproxy"
         fi
 
         if [ -n "$${HOME_LOCATION}" ]; then
@@ -451,8 +456,9 @@ for ((i=1; i<=NUM_PLANES; i++)); do
       - MAVLINK_GCS_PORT=\${PLANE${i}_MAVLINK_GCS_PORT:-$MAVLINK_PORT}
       - MAVLINK_ROS_PORT=\${PLANE${i}_MAVLINK_ROS_PORT:-$((MAVLINK_PORT + 1))}
       - SITL_PORT=\${PLANE${i}_SITL_PORT:-$SITL_PORT}
-      - MAVPROXY_ENABLED=\${PLANE${i}_MAVPROXY_ENABLED:-0}
-      - MAVPROXY_OUT=\${PLANE${i}_MAVPROXY_OUT:-127.0.0.1:14550}
+      - MAVPROXY_ENABLED=\${PLANE${i}_MAVPROXY_ENABLED:-1}
+      - MAVPROXY_OUT=\${PLANE${i}_MAVPROXY_OUT:-tcpin:0.0.0.0:$MAVLINK_PORT,tcpin:0.0.0.0:$((MAVLINK_PORT + 1))}
+      - MAVPROXY_MASTER=\${PLANE${i}_MAVPROXY_MASTER:-tcp:127.0.0.0:$SITL_PORT}
 EOF
 
     if [ -n "$DEPENDS_ON" ]; then
@@ -515,7 +521,7 @@ EOF
         SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
 
         if [ "$${MAVPROXY_ENABLED}" = "0" ]; then
-          # Create separate TCP ports for GCS and ROS2 (no MAVProxy) - comma-separated in single --out parameter
+          # Use MAVProxy to create separate TCP ports for GCS and MAVROS2
           SIM_CMD="$$SIM_CMD --no-mavproxy --out=tcpin:0.0.0.0:$${MAVLINK_GCS_PORT},tcpin:0.0.0.0:$${MAVLINK_ROS_PORT}"
         else
           SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
@@ -605,8 +611,9 @@ for ((i=1; i<=NUM_VTOLS; i++)); do
       - MAVLINK_GCS_PORT=\${VTOL${i}_MAVLINK_GCS_PORT:-$MAVLINK_PORT}
       - MAVLINK_ROS_PORT=\${VTOL${i}_MAVLINK_ROS_PORT:-$((MAVLINK_PORT + 1))}
       - SITL_PORT=\${VTOL${i}_SITL_PORT:-$SITL_PORT}
-      - MAVPROXY_ENABLED=\${VTOL${i}_MAVPROXY_ENABLED:-0}
-      - MAVPROXY_OUT=\${VTOL${i}_MAVPROXY_OUT:-127.0.0.1:14550}
+      - MAVPROXY_ENABLED=\${VTOL${i}_MAVPROXY_ENABLED:-1}
+      - MAVPROXY_OUT=\${VTOL${i}_MAVPROXY_OUT:-tcpin:0.0.0.0:$MAVLINK_PORT,tcpin:0.0.0.0:$((MAVLINK_PORT + 1))}
+      - MAVPROXY_MASTER=\${VTOL${i}_MAVPROXY_MASTER:-tcp:127.0.0.1:$SITL_PORT}
 EOF
 
     if [ -n "$DEPENDS_ON" ]; then
@@ -669,7 +676,7 @@ EOF
         SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
 
         if [ "$${MAVPROXY_ENABLED}" = "0" ]; then
-          # Create separate TCP ports for GCS and ROS2 (no MAVProxy) - comma-separated in single --out parameter
+          # Use MAVProxy to create separate TCP ports for GCS and MAVROS2
           SIM_CMD="$$SIM_CMD --no-mavproxy --out=tcpin:0.0.0.0:$${MAVLINK_GCS_PORT},tcpin:0.0.0.0:$${MAVLINK_ROS_PORT}"
         else
           SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
