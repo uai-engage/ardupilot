@@ -303,45 +303,45 @@ EOF
     cat >> "$OUTPUT_COMPOSE" << 'EOF'
         echo "========================================="
 
-        PARAM_FILE="/tmp/copter${INSTANCE}_params.parm"
-        echo "# Copter ${INSTANCE} Parameters" > $PARAM_FILE
-        echo "LOG_DISARMED 1" >> $PARAM_FILE
-        echo "LOG_BACKEND_TYPE 1" >> $PARAM_FILE
-        echo "DDS_ENABLE 1" >> $PARAM_FILE
-        echo "DDS_UDP_PORT ${DDS_UDP_PORT}" >> $PARAM_FILE
-        echo "DDS_IP0 ${DDS_IP0}" >> $PARAM_FILE
-        echo "DDS_IP1 ${DDS_IP1}" >> $PARAM_FILE
-        echo "DDS_IP2 ${DDS_IP2}" >> $PARAM_FILE
-        echo "DDS_IP3 ${DDS_IP3}" >> $PARAM_FILE
-        echo "DDS_DOMAIN_ID ${DDS_DOMAIN_ID}" >> $PARAM_FILE
-        echo "SYSID_THISMAV ${SYSID}" >> $PARAM_FILE
+        PARAM_FILE="/tmp/copter$${INSTANCE}_params.parm"
+        echo "# Copter $${INSTANCE} Parameters" > $$PARAM_FILE
+        echo "LOG_DISARMED 1" >> $$PARAM_FILE
+        echo "LOG_BACKEND_TYPE 1" >> $$PARAM_FILE
+        echo "DDS_ENABLE 1" >> $$PARAM_FILE
+        echo "DDS_UDP_PORT $${DDS_UDP_PORT}" >> $$PARAM_FILE
+        echo "DDS_IP0 $${DDS_IP0}" >> $$PARAM_FILE
+        echo "DDS_IP1 $${DDS_IP1}" >> $$PARAM_FILE
+        echo "DDS_IP2 $${DDS_IP2}" >> $$PARAM_FILE
+        echo "DDS_IP3 $${DDS_IP3}" >> $$PARAM_FILE
+        echo "DDS_DOMAIN_ID $${DDS_DOMAIN_ID}" >> $$PARAM_FILE
+        echo "SYSID_THISMAV $${SYSID}" >> $$PARAM_FILE
 
         cd /ardupilot
 
-        if [ "$SKIP_BUILD" != "1" ]; then
+        if [ "$$SKIP_BUILD" != "1" ]; then
           echo "Building ArduCopter..."
           git submodule update --init --recursive 2>/dev/null || true
           ./waf configure --board sitl --enable-DDS || (sleep 2 && ./waf configure --board sitl --enable-DDS)
           ./waf copter
         fi
 
-        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduCopter --model ${MODEL} --speedup ${SPEEDUP} --instance ${INSTANCE} --sim-address=${SIM_ADDRESS} --add-param-file $PARAM_FILE --enable-DDS --no-mavproxy"
+        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduCopter --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
 
-        if [ -n "${HOME_LOCATION}" ]; then
-          SIM_CMD="$SIM_CMD --home ${HOME_LOCATION}"
+        if [ -n "$${HOME_LOCATION}" ]; then
+          SIM_CMD="$$SIM_CMD --home $${HOME_LOCATION}"
         fi
 
-        if [ "${WIPE}" = "1" ]; then
-          SIM_CMD="$SIM_CMD -w"
+        if [ "$${WIPE}" = "1" ]; then
+          SIM_CMD="$$SIM_CMD -w"
         fi
 
-        touch /tmp/ArduCopter-${INSTANCE}.log
-        ln -sf /tmp/ArduCopter-${INSTANCE}.log /ardupilot/logs/ArduCopter.log
-        tail -f /tmp/ArduCopter-${INSTANCE}.log &
-        TAIL_PID=$!
-        trap "kill $TAIL_PID 2>/dev/null || true" EXIT INT TERM
+        touch /tmp/ArduCopter-$${INSTANCE}.log
+        ln -sf /tmp/ArduCopter-$${INSTANCE}.log /ardupilot/logs/ArduCopter.log
+        tail -f /tmp/ArduCopter-$${INSTANCE}.log &
+        TAIL_PID=$$!
+        trap "kill $$TAIL_PID 2>/dev/null || true" EXIT INT TERM
 
-        exec $SIM_CMD
+        exec $$SIM_CMD
 EOF
 
     INSTANCE=$((INSTANCE + 1))
@@ -435,45 +435,45 @@ EOF
     cat >> "$OUTPUT_COMPOSE" << 'EOF'
         echo "========================================="
 
-        PARAM_FILE="/tmp/plane${INSTANCE}_params.parm"
-        echo "# Plane ${INSTANCE} Parameters" > $PARAM_FILE
-        echo "LOG_DISARMED 1" >> $PARAM_FILE
-        echo "LOG_BACKEND_TYPE 1" >> $PARAM_FILE
-        echo "DDS_ENABLE 1" >> $PARAM_FILE
-        echo "DDS_UDP_PORT ${DDS_UDP_PORT}" >> $PARAM_FILE
-        echo "DDS_IP0 ${DDS_IP0}" >> $PARAM_FILE
-        echo "DDS_IP1 ${DDS_IP1}" >> $PARAM_FILE
-        echo "DDS_IP2 ${DDS_IP2}" >> $PARAM_FILE
-        echo "DDS_IP3 ${DDS_IP3}" >> $PARAM_FILE
-        echo "DDS_DOMAIN_ID ${DDS_DOMAIN_ID}" >> $PARAM_FILE
-        echo "SYSID_THISMAV ${SYSID}" >> $PARAM_FILE
+        PARAM_FILE="/tmp/plane$${INSTANCE}_params.parm"
+        echo "# Plane $${INSTANCE} Parameters" > $$PARAM_FILE
+        echo "LOG_DISARMED 1" >> $$PARAM_FILE
+        echo "LOG_BACKEND_TYPE 1" >> $$PARAM_FILE
+        echo "DDS_ENABLE 1" >> $$PARAM_FILE
+        echo "DDS_UDP_PORT $${DDS_UDP_PORT}" >> $$PARAM_FILE
+        echo "DDS_IP0 $${DDS_IP0}" >> $$PARAM_FILE
+        echo "DDS_IP1 $${DDS_IP1}" >> $$PARAM_FILE
+        echo "DDS_IP2 $${DDS_IP2}" >> $$PARAM_FILE
+        echo "DDS_IP3 $${DDS_IP3}" >> $$PARAM_FILE
+        echo "DDS_DOMAIN_ID $${DDS_DOMAIN_ID}" >> $$PARAM_FILE
+        echo "SYSID_THISMAV $${SYSID}" >> $$PARAM_FILE
 
         cd /ardupilot
 
-        if [ "$SKIP_BUILD" != "1" ]; then
+        if [ "$$SKIP_BUILD" != "1" ]; then
           echo "Building ArduPlane..."
           git submodule update --init --recursive 2>/dev/null || true
           ./waf configure --board sitl --enable-DDS || (sleep 2 && ./waf configure --board sitl --enable-DDS)
           ./waf plane
         fi
 
-        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model ${MODEL} --speedup ${SPEEDUP} --instance ${INSTANCE} --sim-address=${SIM_ADDRESS} --add-param-file $PARAM_FILE --enable-DDS --no-mavproxy"
+        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
 
-        if [ -n "${HOME_LOCATION}" ]; then
-          SIM_CMD="$SIM_CMD --home ${HOME_LOCATION}"
+        if [ -n "$${HOME_LOCATION}" ]; then
+          SIM_CMD="$$SIM_CMD --home $${HOME_LOCATION}"
         fi
 
-        if [ "${WIPE}" = "1" ]; then
-          SIM_CMD="$SIM_CMD -w"
+        if [ "$${WIPE}" = "1" ]; then
+          SIM_CMD="$$SIM_CMD -w"
         fi
 
-        touch /tmp/ArduPlane-${INSTANCE}.log
-        ln -sf /tmp/ArduPlane-${INSTANCE}.log /ardupilot/logs/ArduPlane.log
-        tail -f /tmp/ArduPlane-${INSTANCE}.log &
-        TAIL_PID=$!
-        trap "kill $TAIL_PID 2>/dev/null || true" EXIT INT TERM
+        touch /tmp/ArduPlane-$${INSTANCE}.log
+        ln -sf /tmp/ArduPlane-$${INSTANCE}.log /ardupilot/logs/ArduPlane.log
+        tail -f /tmp/ArduPlane-$${INSTANCE}.log &
+        TAIL_PID=$$!
+        trap "kill $$TAIL_PID 2>/dev/null || true" EXIT INT TERM
 
-        exec $SIM_CMD
+        exec $$SIM_CMD
 EOF
 
     INSTANCE=$((INSTANCE + 1))
@@ -566,45 +566,45 @@ EOF
     cat >> "$OUTPUT_COMPOSE" << 'EOF'
         echo "========================================="
 
-        PARAM_FILE="/tmp/vtol${INSTANCE}_params.parm"
-        echo "# VTOL ${INSTANCE} Parameters" > $PARAM_FILE
-        echo "LOG_DISARMED 1" >> $PARAM_FILE
-        echo "LOG_BACKEND_TYPE 1" >> $PARAM_FILE
-        echo "DDS_ENABLE 1" >> $PARAM_FILE
-        echo "DDS_UDP_PORT ${DDS_UDP_PORT}" >> $PARAM_FILE
-        echo "DDS_IP0 ${DDS_IP0}" >> $PARAM_FILE
-        echo "DDS_IP1 ${DDS_IP1}" >> $PARAM_FILE
-        echo "DDS_IP2 ${DDS_IP2}" >> $PARAM_FILE
-        echo "DDS_IP3 ${DDS_IP3}" >> $PARAM_FILE
-        echo "DDS_DOMAIN_ID ${DDS_DOMAIN_ID}" >> $PARAM_FILE
-        echo "SYSID_THISMAV ${SYSID}" >> $PARAM_FILE
+        PARAM_FILE="/tmp/vtol$${INSTANCE}_params.parm"
+        echo "# VTOL $${INSTANCE} Parameters" > $$PARAM_FILE
+        echo "LOG_DISARMED 1" >> $$PARAM_FILE
+        echo "LOG_BACKEND_TYPE 1" >> $$PARAM_FILE
+        echo "DDS_ENABLE 1" >> $$PARAM_FILE
+        echo "DDS_UDP_PORT $${DDS_UDP_PORT}" >> $$PARAM_FILE
+        echo "DDS_IP0 $${DDS_IP0}" >> $$PARAM_FILE
+        echo "DDS_IP1 $${DDS_IP1}" >> $$PARAM_FILE
+        echo "DDS_IP2 $${DDS_IP2}" >> $$PARAM_FILE
+        echo "DDS_IP3 $${DDS_IP3}" >> $$PARAM_FILE
+        echo "DDS_DOMAIN_ID $${DDS_DOMAIN_ID}" >> $$PARAM_FILE
+        echo "SYSID_THISMAV $${SYSID}" >> $$PARAM_FILE
 
         cd /ardupilot
 
-        if [ "$SKIP_BUILD" != "1" ]; then
+        if [ "$$SKIP_BUILD" != "1" ]; then
           echo "Building ArduPlane (for VTOL)..."
           git submodule update --init --recursive 2>/dev/null || true
           ./waf configure --board sitl --enable-DDS || (sleep 2 && ./waf configure --board sitl --enable-DDS)
           ./waf plane
         fi
 
-        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model ${MODEL} --speedup ${SPEEDUP} --instance ${INSTANCE} --sim-address=${SIM_ADDRESS} --add-param-file $PARAM_FILE --enable-DDS --no-mavproxy"
+        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
 
-        if [ -n "${HOME_LOCATION}" ]; then
-          SIM_CMD="$SIM_CMD --home ${HOME_LOCATION}"
+        if [ -n "$${HOME_LOCATION}" ]; then
+          SIM_CMD="$$SIM_CMD --home $${HOME_LOCATION}"
         fi
 
-        if [ "${WIPE}" = "1" ]; then
-          SIM_CMD="$SIM_CMD -w"
+        if [ "$${WIPE}" = "1" ]; then
+          SIM_CMD="$$SIM_CMD -w"
         fi
 
-        touch /tmp/ArduPlane-${INSTANCE}.log
-        ln -sf /tmp/ArduPlane-${INSTANCE}.log /ardupilot/logs/ArduPlane.log
-        tail -f /tmp/ArduPlane-${INSTANCE}.log &
-        TAIL_PID=$!
-        trap "kill $TAIL_PID 2>/dev/null || true" EXIT INT TERM
+        touch /tmp/ArduPlane-$${INSTANCE}.log
+        ln -sf /tmp/ArduPlane-$${INSTANCE}.log /ardupilot/logs/ArduPlane.log
+        tail -f /tmp/ArduPlane-$${INSTANCE}.log &
+        TAIL_PID=$$!
+        trap "kill $$TAIL_PID 2>/dev/null || true" EXIT INT TERM
 
-        exec $SIM_CMD
+        exec $$SIM_CMD
 EOF
 
     INSTANCE=$((INSTANCE + 1))
