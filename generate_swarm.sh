@@ -683,12 +683,12 @@ echo -e "  1. Start Micro ROS Agent:"
 echo -e "     ${GREEN}ros2 run micro_ros_agent micro_ros_agent udp4 -p 2019${NC}"
 echo ""
 echo -e "  2. Start the swarm:"
-echo -e "     ${GREEN}docker-compose -f $OUTPUT_COMPOSE --env-file $OUTPUT_ENV up${NC}"
+echo -e "     ${GREEN}docker compose -f $OUTPUT_COMPOSE --env-file $OUTPUT_ENV up${NC}"
 echo ""
 
 # Auto-start if requested
 if [ "$AUTO_START" = true ]; then
     echo -e "${YELLOW}Auto-starting swarm...${NC}"
     echo ""
-    docker-compose -f "$OUTPUT_COMPOSE" --env-file "$OUTPUT_ENV" up
+    docker compose -f "$OUTPUT_COMPOSE" --env-file "$OUTPUT_ENV" up
 fi
