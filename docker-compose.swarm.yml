@@ -78,6 +78,7 @@ services:
       - SKIP_BUILD=0
       - BUILD_TARGET=sitl
       - MAVPROXY_ENABLED=0
+    entrypoint: ["/bin/bash", "-c"]
     command:
       - |
         set -e
@@ -173,6 +174,7 @@ services:
       - SKIP_BUILD=1  # Reuse build from copter-1
     depends_on:
       - copter-1
+    entrypoint: ["/bin/bash", "-c"]
     command:
       - |
         set -e
@@ -255,6 +257,7 @@ services:
       - BUILD_TARGET=sitl
     depends_on:
       - copter-1
+    entrypoint: ["/bin/bash", "-c"]
     command:
       - |
         set -e
@@ -343,6 +346,7 @@ services:
       - SKIP_BUILD=1  # Reuse plane build
     depends_on:
       - plane-1
+    entrypoint: ["/bin/bash", "-c"]
     command:
       - |
         set -e
