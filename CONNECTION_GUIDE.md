@@ -6,14 +6,17 @@ Quick reference for connecting to your ArduPilot SITL multi-vehicle swarm.
 
 ## Port Overview
 
-Each vehicle uses **4 different ports** for different purposes:
+Each vehicle uses **5 different ports** for different purposes:
 
 | Port Type | Protocol | Purpose | Used By |
 |-----------|----------|---------|---------|
-| **MAVLink** | TCP | Ground Control Station communication | Mission Planner, QGroundControl |
+| **MAVLink GCS** | TCP | Ground Control Station communication | Mission Planner, QGroundControl |
+| **MAVLink ROS** | TCP | ROS2 MAVLink bridge communication | MAVROS2 |
 | **SITL** | UDP | External simulator control | Gazebo, RealFlight, X-Plane |
-| **DDS** | UDP | ROS2 communication | ROS2 Micro Agent |
-| **MAVProxy** | UDP | Telemetry routing/multiplexing | MAVProxy GCS |
+| **DDS** | UDP | ROS2 DDS communication | ROS2 Micro Agent |
+| **MAVProxy** | UDP | Telemetry routing/multiplexing (optional) | MAVProxy GCS |
+
+**Note**: Each vehicle gets dedicated MAVLink TCP ports to avoid conflicts when multiple clients (GCS and ROS2) connect simultaneously.
 
 ---
 
@@ -159,7 +162,9 @@ ros2 topic echo /vehicle_3/ap/attitude/quaternion
 
 **Key Difference**:
 - **Micro ROS Agent**: Uses DDS protocol (port 2019+), ArduPilot acts as DDS client
-- **MAVROS2**: Uses MAVLink protocol (port 5760+), connects to existing MAVLink port
+- **MAVROS2**: Uses MAVLink protocol (port 5761+), connects to dedicated MAVLink ROS port
+
+**Important**: Each vehicle has **separate MAVLink TCP ports** for GCS (5760, 5770...) and ROS2 (5761, 5771...). This prevents connection conflicts when both Mission Planner and MAVROS2 are used simultaneously.
 
 ### When to Use MAVROS2 vs Micro ROS Agent:
 
@@ -206,7 +211,7 @@ def generate_launch_description():
             name='mavros_copter1',
             namespace='copter1',
             parameters=[{
-                'fcu_url': 'tcp://127.0.0.1:5760@',
+                'fcu_url': 'tcp://127.0.0.1:5761@',  # Dedicated ROS port for Copter 1
                 'gcs_url': '',
                 'target_system_id': 1,
                 'target_component_id': 1,
@@ -240,7 +245,7 @@ def generate_launch_description():
             name='mavros_copter1',
             namespace='copter1',
             parameters=[{
-                'fcu_url': 'tcp://127.0.0.1:5760@',
+                'fcu_url': 'tcp://127.0.0.1:5761@',  # Dedicated ROS port for Copter 1
                 'target_system_id': 1,
                 'target_component_id': 1,
                 'fcu_protocol': 'v2.0',
@@ -254,7 +259,7 @@ def generate_launch_description():
             name='mavros_copter2',
             namespace='copter2',
             parameters=[{
-                'fcu_url': 'tcp://127.0.0.1:5770@',
+                'fcu_url': 'tcp://127.0.0.1:5771@',  # Dedicated ROS port for Copter 2
                 'target_system_id': 2,
                 'target_component_id': 1,
                 'fcu_protocol': 'v2.0',
@@ -275,7 +280,7 @@ ros2 launch ardupilot_mavros multi_vehicle.launch.py
 ```bash
 ros2 run mavros mavros_node --ros-args \
   -r __ns:=/copter1 \
-  -p fcu_url:=tcp://127.0.0.1:5760@ \
+  -p fcu_url:=tcp://127.0.0.1:5761@ \
   -p target_system_id:=1
 ```
 
@@ -283,7 +288,7 @@ ros2 run mavros mavros_node --ros-args \
 ```bash
 ros2 run mavros mavros_node --ros-args \
   -r __ns:=/copter2 \
-  -p fcu_url:=tcp://127.0.0.1:5770@ \
+  -p fcu_url:=tcp://127.0.0.1:5771@ \
   -p target_system_id:=2
 ```
 
@@ -291,20 +296,22 @@ ros2 run mavros mavros_node --ros-args \
 ```bash
 ros2 run mavros mavros_node --ros-args \
   -r __ns:=/plane1 \
-  -p fcu_url:=tcp://127.0.0.1:5780@ \
+  -p fcu_url:=tcp://127.0.0.1:5781@ \
   -p target_system_id:=3
 ```
 
 ### Port Configuration for MAVROS2:
 
-| Vehicle | Instance | SYSID | MAVLink Port | MAVROS2 Connection |
-|---------|----------|-------|--------------|-------------------|
-| Copter 1 | 0 | 1 | 5760 | `tcp://127.0.0.1:5760@` |
-| Copter 2 | 1 | 2 | 5770 | `tcp://127.0.0.1:5770@` |
-| Copter 3 | 2 | 3 | 5780 | `tcp://127.0.0.1:5780@` |
-| Plane 1 | 3 | 4 | 5790 | `tcp://127.0.0.1:5790@` |
+| Vehicle | Instance | SYSID | GCS Port | ROS Port | MAVROS2 Connection |
+|---------|----------|-------|----------|----------|-------------------|
+| Copter 1 | 0 | 1 | 5760 | **5761** | `tcp://127.0.0.1:5761@` |
+| Copter 2 | 1 | 2 | 5770 | **5771** | `tcp://127.0.0.1:5771@` |
+| Copter 3 | 2 | 3 | 5780 | **5781** | `tcp://127.0.0.1:5781@` |
+| Plane 1 | 3 | 4 | 5790 | **5791** | `tcp://127.0.0.1:5791@` |
 
-**Formula**: `tcp://127.0.0.1:<5760 + Instance × 10>@`
+**Formula**: `tcp://127.0.0.1:<5761 + Instance × 10>@`
+
+**Note**: Use the **ROS Port** (odd numbers) for MAVROS2, not the GCS Port. This prevents connection conflicts when Mission Planner is also connected.
 
 ### MAVROS2 Topic Structure:
 

@@ -157,10 +157,11 @@ for ((i=1; i<=NUM_COPTERS; i++)); do
 COPTER${i}_MODEL=quad
 COPTER${i}_SYSID=$SYSID
 COPTER${i}_HOME=$DEFAULT_LAT,$LON_OFFSET,$DEFAULT_ALT,$DEFAULT_HDG
+COPTER${i}_MAVLINK_GCS_PORT=$((5760 + ($i - 1) * 10))
+COPTER${i}_MAVLINK_ROS_PORT=$((5761 + ($i - 1) * 10))
+COPTER${i}_SITL_PORT=$((5501 + ($i - 1) * 10))
 COPTER${i}_MAVPROXY_ENABLED=0
 COPTER${i}_MAVPROXY_OUT=127.0.0.1:$((14550 + ($i - 1)))
-COPTER${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5760 + ($i - 1) * 10))
-COPTER${i}_MAVPROXY_SITL=127.0.0.1:$((5501 + ($i - 1) * 10))
 EOF
 
     SYSID=$((SYSID + 1))
@@ -179,10 +180,11 @@ for ((i=1; i<=NUM_PLANES; i++)); do
 PLANE${i}_MODEL=plane
 PLANE${i}_SYSID=$SYSID
 PLANE${i}_HOME=$DEFAULT_LAT,$LON_OFFSET,$ALT_OFFSET,$DEFAULT_HDG
+PLANE${i}_MAVLINK_GCS_PORT=$((5760 + ($VEHICLE_NUM - 1) * 10))
+PLANE${i}_MAVLINK_ROS_PORT=$((5761 + ($VEHICLE_NUM - 1) * 10))
+PLANE${i}_SITL_PORT=$((5501 + ($VEHICLE_NUM - 1) * 10))
 PLANE${i}_MAVPROXY_ENABLED=0
 PLANE${i}_MAVPROXY_OUT=127.0.0.1:$((14550 + ($VEHICLE_NUM - 1)))
-PLANE${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5760 + ($VEHICLE_NUM - 1) * 10))
-PLANE${i}_MAVPROXY_SITL=127.0.0.1:$((5501 + ($VEHICLE_NUM - 1) * 10))
 EOF
 
     SYSID=$((SYSID + 1))
@@ -200,10 +202,11 @@ for ((i=1; i<=NUM_VTOLS; i++)); do
 VTOL${i}_MODEL=quadplane
 VTOL${i}_SYSID=$SYSID
 VTOL${i}_HOME=$DEFAULT_LAT,$LON_OFFSET,$DEFAULT_ALT,$DEFAULT_HDG
+VTOL${i}_MAVLINK_GCS_PORT=$((5760 + ($VEHICLE_NUM - 1) * 10))
+VTOL${i}_MAVLINK_ROS_PORT=$((5761 + ($VEHICLE_NUM - 1) * 10))
+VTOL${i}_SITL_PORT=$((5501 + ($VEHICLE_NUM - 1) * 10))
 VTOL${i}_MAVPROXY_ENABLED=0
 VTOL${i}_MAVPROXY_OUT=127.0.0.1:$((14550 + ($VEHICLE_NUM - 1)))
-VTOL${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5760 + ($VEHICLE_NUM - 1) * 10))
-VTOL${i}_MAVPROXY_SITL=127.0.0.1:$((5501 + ($VEHICLE_NUM - 1) * 10))
 EOF
 
     SYSID=$((SYSID + 1))
@@ -290,10 +293,11 @@ for ((i=1; i<=NUM_COPTERS; i++)); do
       - DDS_MAX_RETRY=\${DDS_MAX_RETRY:-10}
       - SKIP_BUILD=$SKIP_BUILD
       - BUILD_TARGET=sitl
+      - MAVLINK_GCS_PORT=\${COPTER${i}_MAVLINK_GCS_PORT:-$MAVLINK_PORT}
+      - MAVLINK_ROS_PORT=\${COPTER${i}_MAVLINK_ROS_PORT:-$((MAVLINK_PORT + 1))}
+      - SITL_PORT=\${COPTER${i}_SITL_PORT:-$SITL_PORT}
       - MAVPROXY_ENABLED=\${COPTER${i}_MAVPROXY_ENABLED:-0}
       - MAVPROXY_OUT=\${COPTER${i}_MAVPROXY_OUT:-127.0.0.1:14550}
-      - MAVPROXY_MASTER=\${COPTER${i}_MAVPROXY_MASTER:-tcp:127.0.0.1:5760}
-      - MAVPROXY_SITL=\${COPTER${i}_MAVPROXY_SITL:-127.0.0.1:5501}
 EOF
 
     if [ -n "$DEPENDS_ON" ]; then
@@ -317,14 +321,15 @@ EOF
         echo "ArduPilot Copter $i (Instance $INSTANCE, SYSID $SYSID)"
         echo "-----------------------------------------"
         echo "PORT ASSIGNMENTS:"
-        echo "  MAVLink:  $MAVLINK_PORT (TCP) - For Mission Planner/GCS"
-        echo "  SITL:     $SITL_PORT (UDP) - For external simulator"
-        echo "  DDS:      $DDS_PORT (UDP) - For ROS2 communication"
-        echo "  MAVProxy: $((14550 + INSTANCE)) (UDP) - For telemetry output"
+        echo "  MAVLink GCS:   $MAVLINK_PORT (TCP) - For Mission Planner/GCS"
+        echo "  MAVLink ROS:   $((MAVLINK_PORT + 1)) (TCP) - For MAVROS2"
+        echo "  SITL:          $SITL_PORT (UDP) - For external simulator"
+        echo "  DDS:           $DDS_PORT (UDP) - For Micro ROS Agent"
         echo ""
         echo "CONNECTIONS:"
         echo "  Mission Planner: tcp:127.0.0.1:$MAVLINK_PORT"
-        echo "  ROS2 Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
+        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$((MAVLINK_PORT + 1))@"
+        echo "  Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
     cat >> "$OUTPUT_COMPOSE" << 'EOF'
@@ -355,7 +360,8 @@ EOF
         SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduCopter --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
 
         if [ "$${MAVPROXY_ENABLED}" = "0" ]; then
-          SIM_CMD="$$SIM_CMD --no-mavproxy"
+          # Create separate TCP ports for GCS and ROS2 (no MAVProxy)
+          SIM_CMD="$$SIM_CMD --no-mavproxy --out=tcpin:0.0.0.0:$${MAVLINK_GCS_PORT} --out=tcpin:0.0.0.0:$${MAVLINK_ROS_PORT}"
         else
           SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
         fi
@@ -442,10 +448,11 @@ for ((i=1; i<=NUM_PLANES; i++)); do
       - DDS_DOMAIN_ID=\${DDS_DOMAIN_ID:-0}
       - SKIP_BUILD=$SKIP_BUILD
       - BUILD_TARGET=sitl
+      - MAVLINK_GCS_PORT=\${PLANE${i}_MAVLINK_GCS_PORT:-$MAVLINK_PORT}
+      - MAVLINK_ROS_PORT=\${PLANE${i}_MAVLINK_ROS_PORT:-$((MAVLINK_PORT + 1))}
+      - SITL_PORT=\${PLANE${i}_SITL_PORT:-$SITL_PORT}
       - MAVPROXY_ENABLED=\${PLANE${i}_MAVPROXY_ENABLED:-0}
       - MAVPROXY_OUT=\${PLANE${i}_MAVPROXY_OUT:-127.0.0.1:14550}
-      - MAVPROXY_MASTER=\${PLANE${i}_MAVPROXY_MASTER:-tcp:127.0.0.1:5760}
-      - MAVPROXY_SITL=\${PLANE${i}_MAVPROXY_SITL:-127.0.0.1:5501}
 EOF
 
     if [ -n "$DEPENDS_ON" ]; then
@@ -469,14 +476,15 @@ EOF
         echo "ArduPilot Plane $i (Instance $INSTANCE, SYSID $SYSID)"
         echo "-----------------------------------------"
         echo "PORT ASSIGNMENTS:"
-        echo "  MAVLink:  $MAVLINK_PORT (TCP) - For Mission Planner/GCS"
-        echo "  SITL:     $SITL_PORT (UDP) - For external simulator"
-        echo "  DDS:      $DDS_PORT (UDP) - For ROS2 communication"
-        echo "  MAVProxy: $((14550 + INSTANCE)) (UDP) - For telemetry output"
+        echo "  MAVLink GCS:   $MAVLINK_PORT (TCP) - For Mission Planner/GCS"
+        echo "  MAVLink ROS:   $((MAVLINK_PORT + 1)) (TCP) - For MAVROS2"
+        echo "  SITL:          $SITL_PORT (UDP) - For external simulator"
+        echo "  DDS:           $DDS_PORT (UDP) - For Micro ROS Agent"
         echo ""
         echo "CONNECTIONS:"
         echo "  Mission Planner: tcp:127.0.0.1:$MAVLINK_PORT"
-        echo "  ROS2 Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
+        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$((MAVLINK_PORT + 1))@"
+        echo "  Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
     cat >> "$OUTPUT_COMPOSE" << 'EOF'
@@ -507,7 +515,8 @@ EOF
         SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
 
         if [ "$${MAVPROXY_ENABLED}" = "0" ]; then
-          SIM_CMD="$$SIM_CMD --no-mavproxy"
+          # Create separate TCP ports for GCS and ROS2 (no MAVProxy)
+          SIM_CMD="$$SIM_CMD --no-mavproxy --out=tcpin:0.0.0.0:$${MAVLINK_GCS_PORT} --out=tcpin:0.0.0.0:$${MAVLINK_ROS_PORT}"
         else
           SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
         fi
@@ -593,10 +602,11 @@ for ((i=1; i<=NUM_VTOLS; i++)); do
       - DDS_IP3=\${DDS_IP3:-1}
       - DDS_DOMAIN_ID=\${DDS_DOMAIN_ID:-0}
       - SKIP_BUILD=$SKIP_BUILD
+      - MAVLINK_GCS_PORT=\${VTOL${i}_MAVLINK_GCS_PORT:-$MAVLINK_PORT}
+      - MAVLINK_ROS_PORT=\${VTOL${i}_MAVLINK_ROS_PORT:-$((MAVLINK_PORT + 1))}
+      - SITL_PORT=\${VTOL${i}_SITL_PORT:-$SITL_PORT}
       - MAVPROXY_ENABLED=\${VTOL${i}_MAVPROXY_ENABLED:-0}
       - MAVPROXY_OUT=\${VTOL${i}_MAVPROXY_OUT:-127.0.0.1:14550}
-      - MAVPROXY_MASTER=\${VTOL${i}_MAVPROXY_MASTER:-tcp:127.0.0.1:5760}
-      - MAVPROXY_SITL=\${VTOL${i}_MAVPROXY_SITL:-127.0.0.1:5501}
 EOF
 
     if [ -n "$DEPENDS_ON" ]; then
@@ -620,14 +630,15 @@ EOF
         echo "ArduPilot VTOL $i (Instance $INSTANCE, SYSID $SYSID)"
         echo "-----------------------------------------"
         echo "PORT ASSIGNMENTS:"
-        echo "  MAVLink:  $MAVLINK_PORT (TCP) - For Mission Planner/GCS"
-        echo "  SITL:     $SITL_PORT (UDP) - For external simulator"
-        echo "  DDS:      $DDS_PORT (UDP) - For ROS2 communication"
-        echo "  MAVProxy: $((14550 + INSTANCE)) (UDP) - For telemetry output"
+        echo "  MAVLink GCS:   $MAVLINK_PORT (TCP) - For Mission Planner/GCS"
+        echo "  MAVLink ROS:   $((MAVLINK_PORT + 1)) (TCP) - For MAVROS2"
+        echo "  SITL:          $SITL_PORT (UDP) - For external simulator"
+        echo "  DDS:           $DDS_PORT (UDP) - For Micro ROS Agent"
         echo ""
         echo "CONNECTIONS:"
         echo "  Mission Planner: tcp:127.0.0.1:$MAVLINK_PORT"
-        echo "  ROS2 Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
+        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$((MAVLINK_PORT + 1))@"
+        echo "  Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
     cat >> "$OUTPUT_COMPOSE" << 'EOF'
@@ -658,7 +669,8 @@ EOF
         SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
 
         if [ "$${MAVPROXY_ENABLED}" = "0" ]; then
-          SIM_CMD="$$SIM_CMD --no-mavproxy"
+          # Create separate TCP ports for GCS and ROS2 (no MAVProxy)
+          SIM_CMD="$$SIM_CMD --no-mavproxy --out=tcpin:0.0.0.0:$${MAVLINK_GCS_PORT} --out=tcpin:0.0.0.0:$${MAVLINK_ROS_PORT}"
         else
           SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
         fi
