@@ -328,7 +328,7 @@ EOF
         echo ""
         echo "CONNECTIONS:"
         echo "  Mission Planner: tcp:127.0.0.1:$MAVLINK_PORT"
-        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$((MAVLINK_PORT + 1))@"
+        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$((MAVLINK_PORT + 1))"
         echo "  Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
@@ -483,7 +483,7 @@ EOF
         echo ""
         echo "CONNECTIONS:"
         echo "  Mission Planner: tcp:127.0.0.1:$MAVLINK_PORT"
-        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$((MAVLINK_PORT + 1))@"
+        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$((MAVLINK_PORT + 1))"
         echo "  Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
@@ -637,7 +637,7 @@ EOF
         echo ""
         echo "CONNECTIONS:"
         echo "  Mission Planner: tcp:127.0.0.1:$MAVLINK_PORT"
-        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$((MAVLINK_PORT + 1))@"
+        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$((MAVLINK_PORT + 1))"
         echo "  Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 

@@ -211,7 +211,7 @@ def generate_launch_description():
             name='mavros_copter1',
             namespace='copter1',
             parameters=[{
-                'fcu_url': 'tcp://127.0.0.1:5761@',  # Dedicated ROS port for Copter 1
+                'fcu_url': 'tcp://127.0.0.1:5761',  # Dedicated ROS port for Copter 1
                 'gcs_url': '',
                 'target_system_id': 1,
                 'target_component_id': 1,
@@ -245,7 +245,7 @@ def generate_launch_description():
             name='mavros_copter1',
             namespace='copter1',
             parameters=[{
-                'fcu_url': 'tcp://127.0.0.1:5761@',  # Dedicated ROS port for Copter 1
+                'fcu_url': 'tcp://127.0.0.1:5761',  # Dedicated ROS port for Copter 1
                 'target_system_id': 1,
                 'target_component_id': 1,
                 'fcu_protocol': 'v2.0',
@@ -259,7 +259,7 @@ def generate_launch_description():
             name='mavros_copter2',
             namespace='copter2',
             parameters=[{
-                'fcu_url': 'tcp://127.0.0.1:5771@',  # Dedicated ROS port for Copter 2
+                'fcu_url': 'tcp://127.0.0.1:5771',  # Dedicated ROS port for Copter 2
                 'target_system_id': 2,
                 'target_component_id': 1,
                 'fcu_protocol': 'v2.0',
@@ -280,7 +280,7 @@ ros2 launch ardupilot_mavros multi_vehicle.launch.py
 ```bash
 ros2 run mavros mavros_node --ros-args \
   -r __ns:=/copter1 \
-  -p fcu_url:=tcp://127.0.0.1:5761@ \
+  -p fcu_url:=tcp://127.0.0.1:5761 \
   -p target_system_id:=1
 ```
 
@@ -288,7 +288,7 @@ ros2 run mavros mavros_node --ros-args \
 ```bash
 ros2 run mavros mavros_node --ros-args \
   -r __ns:=/copter2 \
-  -p fcu_url:=tcp://127.0.0.1:5771@ \
+  -p fcu_url:=tcp://127.0.0.1:5771 \
   -p target_system_id:=2
 ```
 
@@ -296,7 +296,7 @@ ros2 run mavros mavros_node --ros-args \
 ```bash
 ros2 run mavros mavros_node --ros-args \
   -r __ns:=/plane1 \
-  -p fcu_url:=tcp://127.0.0.1:5781@ \
+  -p fcu_url:=tcp://127.0.0.1:5781 \
   -p target_system_id:=3
 ```
 
@@ -304,12 +304,12 @@ ros2 run mavros mavros_node --ros-args \
 
 | Vehicle | Instance | SYSID | GCS Port | ROS Port | MAVROS2 Connection |
 |---------|----------|-------|----------|----------|-------------------|
-| Copter 1 | 0 | 1 | 5760 | **5761** | `tcp://127.0.0.1:5761@` |
-| Copter 2 | 1 | 2 | 5770 | **5771** | `tcp://127.0.0.1:5771@` |
-| Copter 3 | 2 | 3 | 5780 | **5781** | `tcp://127.0.0.1:5781@` |
-| Plane 1 | 3 | 4 | 5790 | **5791** | `tcp://127.0.0.1:5791@` |
+| Copter 1 | 0 | 1 | 5760 | **5761** | `tcp://127.0.0.1:5761` |
+| Copter 2 | 1 | 2 | 5770 | **5771** | `tcp://127.0.0.1:5771` |
+| Copter 3 | 2 | 3 | 5780 | **5781** | `tcp://127.0.0.1:5781` |
+| Plane 1 | 3 | 4 | 5790 | **5791** | `tcp://127.0.0.1:5791` |
 
-**Formula**: `tcp://127.0.0.1:<5761 + Instance × 10>@`
+**Formula**: `tcp://127.0.0.1:<5761 + Instance × 10>` (no @ for client mode)`
 
 **Note**: Use the **ROS Port** (odd numbers) for MAVROS2, not the GCS Port. This prevents connection conflicts when Mission Planner is also connected.
 
@@ -400,7 +400,7 @@ docker compose -f docker-compose-generated.yml --env-file .env.generated up
 source /opt/ros/humble/setup.bash
 ros2 run mavros mavros_node --ros-args \
   -r __ns:=/copter1 \
-  -p fcu_url:=tcp://127.0.0.1:5760@ \
+  -p fcu_url:=tcp://127.0.0.1:5760 \
   -p target_system_id:=1
 ```
 
@@ -409,7 +409,7 @@ ros2 run mavros mavros_node --ros-args \
 source /opt/ros/humble/setup.bash
 ros2 run mavros mavros_node --ros-args \
   -r __ns:=/copter2 \
-  -p fcu_url:=tcp://127.0.0.1:5770@ \
+  -p fcu_url:=tcp://127.0.0.1:5770 \
   -p target_system_id:=2
 ```
 
@@ -449,7 +449,7 @@ ros2 run micro_ros_agent micro_ros_agent udp4 -p 2019
 ```bash
 ros2 run mavros mavros_node --ros-args \
   -r __ns:=/copter1 \
-  -p fcu_url:=tcp://127.0.0.1:5760@ \
+  -p fcu_url:=tcp://127.0.0.1:5760 \
   -p target_system_id:=1
 ```
 
@@ -628,7 +628,7 @@ docker compose -f docker-compose-generated.yml --env-file .env.generated up
 source /opt/ros/humble/setup.bash
 ros2 run mavros mavros_node --ros-args \
   -r __ns:=/copter1 \
-  -p fcu_url:=tcp://127.0.0.1:5760@ \
+  -p fcu_url:=tcp://127.0.0.1:5760 \
   -p target_system_id:=1
 ```
 
@@ -637,7 +637,7 @@ ros2 run mavros mavros_node --ros-args \
 source /opt/ros/humble/setup.bash
 ros2 run mavros mavros_node --ros-args \
   -r __ns:=/copter2 \
-  -p fcu_url:=tcp://127.0.0.1:5770@ \
+  -p fcu_url:=tcp://127.0.0.1:5770 \
   -p target_system_id:=2
 ```
 
@@ -680,7 +680,7 @@ ros2 run micro_ros_agent micro_ros_agent udp4 -p 2019
 source /opt/ros/humble/setup.bash
 ros2 run mavros mavros_node --ros-args \
   -r __ns:=/copter1 \
-  -p fcu_url:=tcp://127.0.0.1:5760@ \
+  -p fcu_url:=tcp://127.0.0.1:5760 \
   -p target_system_id:=1
 ```
 
@@ -791,7 +791,7 @@ sudo kill -9 <PID>
 |---------------|---------------|----------|-------------------|
 | **Control with Mission Planner** | MAVLink | TCP | `tcp:127.0.0.1:5760` |
 | **ROS2 via Micro ROS Agent** | DDS | UDP | `ros2 run micro_ros_agent micro_ros_agent udp4 -p 2019` |
-| **ROS2 via MAVROS2** | MAVLink | TCP | `ros2 run mavros mavros_node -p fcu_url:=tcp://127.0.0.1:5760@` |
+| **ROS2 via MAVROS2** | MAVLink | TCP | `ros2 run mavros mavros_node -p fcu_url:=tcp://127.0.0.1:5760` |
 | **Connect external simulator** | SITL | UDP | Configure Gazebo to `127.0.0.1:5501` |
 | **Route telemetry with MAVProxy** | MAVProxy OUT | UDP | `mavproxy.py --master=udp:127.0.0.1:14550` |
 
@@ -806,7 +806,7 @@ ros2 run micro_ros_agent micro_ros_agent udp4 -p 2019
 
 **Option 2: MAVROS2 (MAVLink)** - Mature, well-tested, standard ROS topics
 ```bash
-ros2 run mavros mavros_node --ros-args -r __ns:=/copter1 -p fcu_url:=tcp://127.0.0.1:5760@
+ros2 run mavros mavros_node --ros-args -r __ns:=/copter1 -p fcu_url:=tcp://127.0.0.1:5760
 ```
 
 **Option 3: Both** - Use DDS for data and MAVROS2 for commands simultaneously
