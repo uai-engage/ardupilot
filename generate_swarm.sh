@@ -360,8 +360,8 @@ EOF
         SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduCopter --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
 
         if [ "$${MAVPROXY_ENABLED}" = "0" ]; then
-          # Create separate TCP ports for GCS and ROS2 (no MAVProxy)
-          SIM_CMD="$$SIM_CMD --no-mavproxy --out=tcpin:0.0.0.0:$${MAVLINK_GCS_PORT} --out=tcpin:0.0.0.0:$${MAVLINK_ROS_PORT}"
+          # Create separate TCP ports for GCS and ROS2 (no MAVProxy) - comma-separated in single --out parameter
+          SIM_CMD="$$SIM_CMD --no-mavproxy --out=tcpin:0.0.0.0:$${MAVLINK_GCS_PORT},tcpin:0.0.0.0:$${MAVLINK_ROS_PORT}"
         else
           SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
         fi
@@ -515,8 +515,8 @@ EOF
         SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
 
         if [ "$${MAVPROXY_ENABLED}" = "0" ]; then
-          # Create separate TCP ports for GCS and ROS2 (no MAVProxy)
-          SIM_CMD="$$SIM_CMD --no-mavproxy --out=tcpin:0.0.0.0:$${MAVLINK_GCS_PORT} --out=tcpin:0.0.0.0:$${MAVLINK_ROS_PORT}"
+          # Create separate TCP ports for GCS and ROS2 (no MAVProxy) - comma-separated in single --out parameter
+          SIM_CMD="$$SIM_CMD --no-mavproxy --out=tcpin:0.0.0.0:$${MAVLINK_GCS_PORT},tcpin:0.0.0.0:$${MAVLINK_ROS_PORT}"
         else
           SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
         fi
@@ -669,8 +669,8 @@ EOF
         SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
 
         if [ "$${MAVPROXY_ENABLED}" = "0" ]; then
-          # Create separate TCP ports for GCS and ROS2 (no MAVProxy)
-          SIM_CMD="$$SIM_CMD --no-mavproxy --out=tcpin:0.0.0.0:$${MAVLINK_GCS_PORT} --out=tcpin:0.0.0.0:$${MAVLINK_ROS_PORT}"
+          # Create separate TCP ports for GCS and ROS2 (no MAVProxy) - comma-separated in single --out parameter
+          SIM_CMD="$$SIM_CMD --no-mavproxy --out=tcpin:0.0.0.0:$${MAVLINK_GCS_PORT},tcpin:0.0.0.0:$${MAVLINK_ROS_PORT}"
         else
           SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
         fi
