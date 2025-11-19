@@ -220,6 +220,7 @@ SYSID=1
 for ((i=1; i<=NUM_COPTERS; i++)); do
     MAVLINK_PORT=$((5760 + INSTANCE * 10))
     SITL_PORT=$((5501 + INSTANCE * 10))
+    DDS_PORT=$((2019 + INSTANCE))
 
     # Determine if this is the first copter (needs to build)
     if [ "$COPTER_BUILT" = false ]; then
@@ -265,7 +266,7 @@ for ((i=1; i<=NUM_COPTERS; i++)); do
       - HOME_LOCATION=\${COPTER${i}_HOME:-}
       - ENABLE_DDS=\${ENABLE_DDS:-1}
       - DDS_ENABLE=1
-      - DDS_UDP_PORT=\${DDS_UDP_PORT:-2019}
+      - DDS_UDP_PORT=$DDS_PORT
       - DDS_IP0=\${DDS_IP0:-127}
       - DDS_IP1=\${DDS_IP1:-0}
       - DDS_IP2=\${DDS_IP2:-0}
@@ -297,7 +298,7 @@ EOF
 
     cat >> "$OUTPUT_COMPOSE" << EOF
         echo "ArduPilot Copter $i (Instance $INSTANCE)"
-        echo "MAVLink: $MAVLINK_PORT, SITL: $SITL_PORT, DDS: 2019"
+        echo "MAVLink: $MAVLINK_PORT, SITL: $SITL_PORT, DDS: $DDS_PORT"
 EOF
 
     cat >> "$OUTPUT_COMPOSE" << 'EOF'
@@ -352,6 +353,7 @@ done
 for ((i=1; i<=NUM_PLANES; i++)); do
     MAVLINK_PORT=$((5760 + INSTANCE * 10))
     SITL_PORT=$((5501 + INSTANCE * 10))
+    DDS_PORT=$((2019 + INSTANCE))
 
     # Determine if this is the first plane (needs to build)
     if [ "$PLANE_BUILT" = false ]; then
@@ -400,7 +402,7 @@ for ((i=1; i<=NUM_PLANES; i++)); do
       - HOME_LOCATION=\${PLANE${i}_HOME:-}
       - ENABLE_DDS=\${ENABLE_DDS:-1}
       - DDS_ENABLE=1
-      - DDS_UDP_PORT=\${DDS_UDP_PORT:-2019}
+      - DDS_UDP_PORT=$DDS_PORT
       - DDS_IP0=\${DDS_IP0:-127}
       - DDS_IP1=\${DDS_IP1:-0}
       - DDS_IP2=\${DDS_IP2:-0}
@@ -429,7 +431,7 @@ EOF
 
     cat >> "$OUTPUT_COMPOSE" << EOF
         echo "ArduPilot Plane $i (Instance $INSTANCE)"
-        echo "MAVLink: $MAVLINK_PORT, SITL: $SITL_PORT, DDS: 2019"
+        echo "MAVLink: $MAVLINK_PORT, SITL: $SITL_PORT, DDS: $DDS_PORT"
 EOF
 
     cat >> "$OUTPUT_COMPOSE" << 'EOF'
@@ -484,6 +486,7 @@ done
 for ((i=1; i<=NUM_VTOLS; i++)); do
     MAVLINK_PORT=$((5760 + INSTANCE * 10))
     SITL_PORT=$((5501 + INSTANCE * 10))
+    DDS_PORT=$((2019 + INSTANCE))
 
     # VTOLs reuse plane build
     SKIP_BUILD=1
@@ -532,7 +535,7 @@ for ((i=1; i<=NUM_VTOLS; i++)); do
       - HOME_LOCATION=\${VTOL${i}_HOME:-}
       - ENABLE_DDS=\${ENABLE_DDS:-1}
       - DDS_ENABLE=1
-      - DDS_UDP_PORT=\${DDS_UDP_PORT:-2019}
+      - DDS_UDP_PORT=$DDS_PORT
       - DDS_IP0=\${DDS_IP0:-127}
       - DDS_IP1=\${DDS_IP1:-0}
       - DDS_IP2=\${DDS_IP2:-0}
@@ -560,7 +563,7 @@ EOF
 
     cat >> "$OUTPUT_COMPOSE" << EOF
         echo "ArduPilot VTOL $i (Instance $INSTANCE)"
-        echo "MAVLink: $MAVLINK_PORT, SITL: $SITL_PORT, DDS: 2019"
+        echo "MAVLink: $MAVLINK_PORT, SITL: $SITL_PORT, DDS: $DDS_PORT"
 EOF
 
     cat >> "$OUTPUT_COMPOSE" << 'EOF'
@@ -658,31 +661,64 @@ SYSID=1
 
 for ((i=1; i<=NUM_COPTERS; i++)); do
     MAVLINK_PORT=$((5760 + INSTANCE * 10))
-    echo -e "  Copter $i: MAVLink ${GREEN}$MAVLINK_PORT${NC}, SYSID ${GREEN}$SYSID${NC}"
+    DDS_PORT=$((2019 + INSTANCE))
+    echo -e "  Copter $i: MAVLink ${GREEN}$MAVLINK_PORT${NC}, DDS ${GREEN}$DDS_PORT${NC}, SYSID ${GREEN}$SYSID${NC}"
     INSTANCE=$((INSTANCE + 1))
     SYSID=$((SYSID + 1))
 done
 
 for ((i=1; i<=NUM_PLANES; i++)); do
     MAVLINK_PORT=$((5760 + INSTANCE * 10))
-    echo -e "  Plane $i:  MAVLink ${GREEN}$MAVLINK_PORT${NC}, SYSID ${GREEN}$SYSID${NC}"
+    DDS_PORT=$((2019 + INSTANCE))
+    echo -e "  Plane $i:  MAVLink ${GREEN}$MAVLINK_PORT${NC}, DDS ${GREEN}$DDS_PORT${NC}, SYSID ${GREEN}$SYSID${NC}"
     INSTANCE=$((INSTANCE + 1))
     SYSID=$((SYSID + 1))
 done
 
 for ((i=1; i<=NUM_VTOLS; i++)); do
     MAVLINK_PORT=$((5760 + INSTANCE * 10))
-    echo -e "  VTOL $i:   MAVLink ${GREEN}$MAVLINK_PORT${NC}, SYSID ${GREEN}$SYSID${NC}"
+    DDS_PORT=$((2019 + INSTANCE))
+    echo -e "  VTOL $i:   MAVLink ${GREEN}$MAVLINK_PORT${NC}, DDS ${GREEN}$DDS_PORT${NC}, SYSID ${GREEN}$SYSID${NC}"
     INSTANCE=$((INSTANCE + 1))
     SYSID=$((SYSID + 1))
 done
 
 echo ""
 echo -e "${YELLOW}Next steps:${NC}"
-echo -e "  1. Start Micro ROS Agent:"
-echo -e "     ${GREEN}ros2 run micro_ros_agent micro_ros_agent udp4 -p 2019${NC}"
+echo -e "  1. Start Micro ROS Agent (one per vehicle):"
 echo ""
-echo -e "  2. Start the swarm:"
+
+INSTANCE=0
+TERMINAL_NUM=1
+
+for ((i=1; i<=NUM_COPTERS; i++)); do
+    DDS_PORT=$((2019 + INSTANCE))
+    echo -e "     ${GREEN}# Terminal $TERMINAL_NUM - Copter $i${NC}"
+    echo -e "     ${GREEN}ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT${NC}"
+    echo ""
+    INSTANCE=$((INSTANCE + 1))
+    TERMINAL_NUM=$((TERMINAL_NUM + 1))
+done
+
+for ((i=1; i<=NUM_PLANES; i++)); do
+    DDS_PORT=$((2019 + INSTANCE))
+    echo -e "     ${GREEN}# Terminal $TERMINAL_NUM - Plane $i${NC}"
+    echo -e "     ${GREEN}ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT${NC}"
+    echo ""
+    INSTANCE=$((INSTANCE + 1))
+    TERMINAL_NUM=$((TERMINAL_NUM + 1))
+done
+
+for ((i=1; i<=NUM_VTOLS; i++)); do
+    DDS_PORT=$((2019 + INSTANCE))
+    echo -e "     ${GREEN}# Terminal $TERMINAL_NUM - VTOL $i${NC}"
+    echo -e "     ${GREEN}ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT${NC}"
+    echo ""
+    INSTANCE=$((INSTANCE + 1))
+    TERMINAL_NUM=$((TERMINAL_NUM + 1))
+done
+
+echo -e "  2. Start the swarm (in a new terminal):"
 echo -e "     ${GREEN}docker compose -f $OUTPUT_COMPOSE --env-file $OUTPUT_ENV up${NC}"
 echo ""
 
