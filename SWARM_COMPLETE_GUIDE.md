@@ -40,13 +40,17 @@ This comprehensive guide covers everything you need to run a multi-vehicle swarm
 # 1. Copy environment template
 cp .env.swarm.example .env.swarm
 
-# 2. (Optional) Edit spawn locations - skip for default behavior
+# 2. Create log directories with proper permissions
+mkdir -p sitl_logs/copter-1 sitl_logs/copter-2 sitl_logs/plane-1 sitl_logs/vtol-1
+chmod -R 777 sitl_logs
+
+# 3. (Optional) Edit spawn locations - skip for default behavior
 nano .env.swarm
 
-# 3. Start ROS2 Micro ROS Agent (ONE agent for all vehicles)
+# 4. Start ROS2 Micro ROS Agent (ONE agent for all vehicles)
 ros2 run micro_ros_agent micro_ros_agent udp4 -p 2019
 
-# 4. Start the swarm in Docker
+# 5. Start the swarm in Docker
 docker-compose -f docker-compose.swarm.yml --env-file .env.swarm up --build
 ```
 
@@ -62,7 +66,17 @@ cd /path/to/ardupilot
 cp .env.swarm.example .env.swarm
 ```
 
-### Step 2: Configure ENV File (Optional)
+### Step 2: Create Log Directories
+
+Create log directories with proper permissions before starting the swarm:
+```bash
+mkdir -p sitl_logs/copter-1 sitl_logs/copter-2 sitl_logs/plane-1 sitl_logs/vtol-1
+chmod -R 777 sitl_logs
+```
+
+**Why?** The Docker containers need writable directories on the host for logs. Creating them beforehand ensures proper permissions.
+
+### Step 3: Configure ENV File (Optional)
 
 The default configuration works out of the box. To customize, edit `.env.swarm`:
 
@@ -72,7 +86,7 @@ nano .env.swarm
 
 See [ENV File Configuration](#env-file-configuration) section below for details.
 
-### Step 3: Start ROS2 Micro ROS Agent
+### Step 4: Start ROS2 Micro ROS Agent
 
 **Important:** Start ONE agent for all vehicles (not 4 separate agents):
 
@@ -90,7 +104,7 @@ Expected output:
 [1234567890.123456] info     | Root.cpp           | set_verbose_level        | logger setup           | verbose_level: 4
 ```
 
-### Step 4: Start the Swarm
+### Step 5: Start the Swarm
 
 In a new terminal:
 

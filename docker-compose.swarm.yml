@@ -89,9 +89,6 @@ services:
         echo "MAVLink: 5760, SITL: 5501, DDS: 2019"
         echo "========================================="
 
-        mkdir -p /ardupilot/logs
-        chmod 777 /ardupilot/logs
-
         PARAM_FILE="/tmp/copter1_params.parm"
         echo "# Copter 1 Parameters" > $$PARAM_FILE
         echo "LOG_DISARMED 1" >> $$PARAM_FILE
@@ -185,9 +182,6 @@ services:
         echo "MAVLink: 5770, SITL: 5511, DDS: 2029"
         echo "========================================="
 
-        mkdir -p /ardupilot/logs
-        chmod 777 /ardupilot/logs
-
         PARAM_FILE="/tmp/copter2_params.parm"
         echo "# Copter 2 Parameters" > $$PARAM_FILE
         echo "LOG_DISARMED 1" >> $$PARAM_FILE
@@ -268,9 +262,6 @@ services:
         echo "ArduPilot Plane 1 (Instance 2)"
         echo "MAVLink: 5780, SITL: 5521, DDS: 2039"
         echo "========================================="
-
-        mkdir -p /ardupilot/logs
-        chmod 777 /ardupilot/logs
 
         PARAM_FILE="/tmp/plane1_params.parm"
         echo "# Plane 1 Parameters" > $$PARAM_FILE
@@ -358,9 +349,6 @@ services:
         echo "ArduPilot VTOL 1 (Instance 3)"
         echo "MAVLink: 5790, SITL: 5531, DDS: 2049"
         echo "========================================="
-
-        mkdir -p /ardupilot/logs
-        chmod 777 /ardupilot/logs
 
         PARAM_FILE="/tmp/vtol1_params.parm"
         echo "# VTOL 1 Parameters" > $$PARAM_FILE
