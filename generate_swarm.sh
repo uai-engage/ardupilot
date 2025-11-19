@@ -157,6 +157,10 @@ for ((i=1; i<=NUM_COPTERS; i++)); do
 COPTER${i}_MODEL=quad
 COPTER${i}_SYSID=$SYSID
 COPTER${i}_HOME=$DEFAULT_LAT,$LON_OFFSET,$DEFAULT_ALT,$DEFAULT_HDG
+COPTER${i}_MAVPROXY_ENABLED=1
+COPTER${i}_MAVPROXY_OUT=127.0.0.1:$((14550 + ($i - 1)))
+COPTER${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5760 + ($i - 1) * 10))
+COPTER${i}_MAVPROXY_SITL=127.0.0.1:$((5501 + ($i - 1) * 10))
 EOF
 
     SYSID=$((SYSID + 1))
@@ -167,6 +171,7 @@ for ((i=1; i<=NUM_PLANES; i++)); do
     # Calculate spawn offset
     LON_OFFSET=$(echo "$DEFAULT_LON + ($NUM_COPTERS + $i - 1) * 0.00001" | bc -l)
     ALT_OFFSET=$((DEFAULT_ALT + 100)) # Planes start 100m higher
+    VEHICLE_NUM=$((NUM_COPTERS + i))
 
     cat >> "$OUTPUT_ENV" << EOF
 
@@ -174,6 +179,10 @@ for ((i=1; i<=NUM_PLANES; i++)); do
 PLANE${i}_MODEL=plane
 PLANE${i}_SYSID=$SYSID
 PLANE${i}_HOME=$DEFAULT_LAT,$LON_OFFSET,$ALT_OFFSET,$DEFAULT_HDG
+PLANE${i}_MAVPROXY_ENABLED=1
+PLANE${i}_MAVPROXY_OUT=127.0.0.1:$((14550 + ($VEHICLE_NUM - 1)))
+PLANE${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5760 + ($VEHICLE_NUM - 1) * 10))
+PLANE${i}_MAVPROXY_SITL=127.0.0.1:$((5501 + ($VEHICLE_NUM - 1) * 10))
 EOF
 
     SYSID=$((SYSID + 1))
@@ -183,6 +192,7 @@ done
 for ((i=1; i<=NUM_VTOLS; i++)); do
     # Calculate spawn offset
     LON_OFFSET=$(echo "$DEFAULT_LON + ($NUM_COPTERS + $NUM_PLANES + $i - 1) * 0.00001" | bc -l)
+    VEHICLE_NUM=$((NUM_COPTERS + NUM_PLANES + i))
 
     cat >> "$OUTPUT_ENV" << EOF
 
@@ -190,6 +200,10 @@ for ((i=1; i<=NUM_VTOLS; i++)); do
 VTOL${i}_MODEL=quadplane
 VTOL${i}_SYSID=$SYSID
 VTOL${i}_HOME=$DEFAULT_LAT,$LON_OFFSET,$DEFAULT_ALT,$DEFAULT_HDG
+VTOL${i}_MAVPROXY_ENABLED=1
+VTOL${i}_MAVPROXY_OUT=127.0.0.1:$((14550 + ($VEHICLE_NUM - 1)))
+VTOL${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5760 + ($VEHICLE_NUM - 1) * 10))
+VTOL${i}_MAVPROXY_SITL=127.0.0.1:$((5501 + ($VEHICLE_NUM - 1) * 10))
 EOF
 
     SYSID=$((SYSID + 1))
@@ -276,7 +290,10 @@ for ((i=1; i<=NUM_COPTERS; i++)); do
       - DDS_MAX_RETRY=\${DDS_MAX_RETRY:-10}
       - SKIP_BUILD=$SKIP_BUILD
       - BUILD_TARGET=sitl
-      - MAVPROXY_ENABLED=0
+      - MAVPROXY_ENABLED=\${COPTER${i}_MAVPROXY_ENABLED:-1}
+      - MAVPROXY_OUT=\${COPTER${i}_MAVPROXY_OUT:-127.0.0.1:14550}
+      - MAVPROXY_MASTER=\${COPTER${i}_MAVPROXY_MASTER:-tcp:127.0.0.1:5760}
+      - MAVPROXY_SITL=\${COPTER${i}_MAVPROXY_SITL:-127.0.0.1:5501}
 EOF
 
     if [ -n "$DEPENDS_ON" ]; then
@@ -326,7 +343,13 @@ EOF
           ./waf copter
         fi
 
-        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduCopter --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
+        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduCopter --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
+
+        if [ "$${MAVPROXY_ENABLED}" = "0" ]; then
+          SIM_CMD="$$SIM_CMD --no-mavproxy"
+        else
+          SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
+        fi
 
         if [ -n "$${HOME_LOCATION}" ]; then
           SIM_CMD="$$SIM_CMD --custom-location $${HOME_LOCATION}"
@@ -410,6 +433,10 @@ for ((i=1; i<=NUM_PLANES; i++)); do
       - DDS_DOMAIN_ID=\${DDS_DOMAIN_ID:-0}
       - SKIP_BUILD=$SKIP_BUILD
       - BUILD_TARGET=sitl
+      - MAVPROXY_ENABLED=\${PLANE${i}_MAVPROXY_ENABLED:-1}
+      - MAVPROXY_OUT=\${PLANE${i}_MAVPROXY_OUT:-127.0.0.1:14550}
+      - MAVPROXY_MASTER=\${PLANE${i}_MAVPROXY_MASTER:-tcp:127.0.0.1:5760}
+      - MAVPROXY_SITL=\${PLANE${i}_MAVPROXY_SITL:-127.0.0.1:5501}
 EOF
 
     if [ -n "$DEPENDS_ON" ]; then
@@ -459,7 +486,13 @@ EOF
           ./waf plane
         fi
 
-        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
+        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
+
+        if [ "$${MAVPROXY_ENABLED}" = "0" ]; then
+          SIM_CMD="$$SIM_CMD --no-mavproxy"
+        else
+          SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
+        fi
 
         if [ -n "$${HOME_LOCATION}" ]; then
           SIM_CMD="$$SIM_CMD --custom-location $${HOME_LOCATION}"
@@ -542,6 +575,10 @@ for ((i=1; i<=NUM_VTOLS; i++)); do
       - DDS_IP3=\${DDS_IP3:-1}
       - DDS_DOMAIN_ID=\${DDS_DOMAIN_ID:-0}
       - SKIP_BUILD=$SKIP_BUILD
+      - MAVPROXY_ENABLED=\${VTOL${i}_MAVPROXY_ENABLED:-1}
+      - MAVPROXY_OUT=\${VTOL${i}_MAVPROXY_OUT:-127.0.0.1:14550}
+      - MAVPROXY_MASTER=\${VTOL${i}_MAVPROXY_MASTER:-tcp:127.0.0.1:5760}
+      - MAVPROXY_SITL=\${VTOL${i}_MAVPROXY_SITL:-127.0.0.1:5501}
 EOF
 
     if [ -n "$DEPENDS_ON" ]; then
@@ -591,7 +628,13 @@ EOF
           ./waf plane
         fi
 
-        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
+        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
+
+        if [ "$${MAVPROXY_ENABLED}" = "0" ]; then
+          SIM_CMD="$$SIM_CMD --no-mavproxy"
+        else
+          SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
+        fi
 
         if [ -n "$${HOME_LOCATION}" ]; then
           SIM_CMD="$$SIM_CMD --custom-location $${HOME_LOCATION}"
