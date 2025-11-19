@@ -158,10 +158,10 @@ COPTER${i}_MODEL=quad
 COPTER${i}_SYSID=$SYSID
 COPTER${i}_HOME=$DEFAULT_LAT,$LON_OFFSET,$DEFAULT_ALT,$DEFAULT_HDG
 COPTER${i}_MAVLINK_GCS_PORT=$((5760 + ($i - 1) * 10))
-COPTER${i}_MAVLINK_ROS_PORT=$((5761 + ($i - 1) * 10))
+COPTER${i}_MAVLINK_ROS_PORT=$((14550 + ($i - 1)))
 COPTER${i}_SITL_PORT=$((5501 + ($i - 1) * 10))
 COPTER${i}_MAVPROXY_ENABLED=1
-COPTER${i}_MAVPROXY_OUT=tcpin:0.0.0.0:$((5760 + ($i - 1) * 10)),tcpin:0.0.0.0:$((5761 + ($i - 1) * 10))
+COPTER${i}_MAVPROXY_OUT=tcpin:0.0.0.0:$((5760 + ($i - 1) * 10)),udpin:0.0.0.0:$((14550 + ($i - 1)))
 COPTER${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5501 + ($i - 1) * 10))
 EOF
 
@@ -182,10 +182,10 @@ PLANE${i}_MODEL=plane
 PLANE${i}_SYSID=$SYSID
 PLANE${i}_HOME=$DEFAULT_LAT,$LON_OFFSET,$ALT_OFFSET,$DEFAULT_HDG
 PLANE${i}_MAVLINK_GCS_PORT=$((5760 + ($VEHICLE_NUM - 1) * 10))
-PLANE${i}_MAVLINK_ROS_PORT=$((5761 + ($VEHICLE_NUM - 1) * 10))
+PLANE${i}_MAVLINK_ROS_PORT=$((14550 + ($VEHICLE_NUM - 1)))
 PLANE${i}_SITL_PORT=$((5501 + ($VEHICLE_NUM - 1) * 10))
 PLANE${i}_MAVPROXY_ENABLED=1
-PLANE${i}_MAVPROXY_OUT=tcpin:0.0.0.0:$((5760 + ($VEHICLE_NUM - 1) * 10)),tcpin:0.0.0.0:$((5761 + ($VEHICLE_NUM - 1) * 10))
+PLANE${i}_MAVPROXY_OUT=tcpin:0.0.0.0:$((5760 + ($VEHICLE_NUM - 1) * 10)),udpin:0.0.0.0:$((14550 + ($VEHICLE_NUM - 1)))
 PLANE${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5501 + ($VEHICLE_NUM - 1) * 10))
 EOF
 
@@ -205,10 +205,10 @@ VTOL${i}_MODEL=quadplane
 VTOL${i}_SYSID=$SYSID
 VTOL${i}_HOME=$DEFAULT_LAT,$LON_OFFSET,$DEFAULT_ALT,$DEFAULT_HDG
 VTOL${i}_MAVLINK_GCS_PORT=$((5760 + ($VEHICLE_NUM - 1) * 10))
-VTOL${i}_MAVLINK_ROS_PORT=$((5761 + ($VEHICLE_NUM - 1) * 10))
+VTOL${i}_MAVLINK_ROS_PORT=$((14550 + ($VEHICLE_NUM - 1)))
 VTOL${i}_SITL_PORT=$((5501 + ($VEHICLE_NUM - 1) * 10))
 VTOL${i}_MAVPROXY_ENABLED=1
-VTOL${i}_MAVPROXY_OUT=tcpin:0.0.0.0:$((5760 + ($VEHICLE_NUM - 1) * 10)),tcpin:0.0.0.0:$((5761 + ($VEHICLE_NUM - 1) * 10))
+VTOL${i}_MAVPROXY_OUT=tcpin:0.0.0.0:$((5760 + ($VEHICLE_NUM - 1) * 10)),udpin:0.0.0.0:$((14550 + ($VEHICLE_NUM - 1)))
 VTOL${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5501 + ($VEHICLE_NUM - 1) * 10))
 EOF
 
@@ -326,13 +326,13 @@ EOF
         echo "-----------------------------------------"
         echo "PORT ASSIGNMENTS:"
         echo "  MAVLink GCS:   $MAVLINK_PORT (TCP) - For Mission Planner/GCS"
-        echo "  MAVLink ROS:   $((MAVLINK_PORT + 1)) (TCP) - For MAVROS2"
+        echo "  MAVLink ROS:   $((14550 + INSTANCE)) (UDP) - For MAVROS2"
         echo "  SITL:          $SITL_PORT (UDP) - For external simulator"
         echo "  DDS:           $DDS_PORT (UDP) - For Micro ROS Agent"
         echo ""
         echo "CONNECTIONS:"
         echo "  Mission Planner: tcp:127.0.0.1:$MAVLINK_PORT"
-        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$((MAVLINK_PORT + 1))"
+        echo "  MAVROS2: fcu_url=udp://127.0.0.1:$((14550 + INSTANCE))@"
         echo "  Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
@@ -483,13 +483,13 @@ EOF
         echo "-----------------------------------------"
         echo "PORT ASSIGNMENTS:"
         echo "  MAVLink GCS:   $MAVLINK_PORT (TCP) - For Mission Planner/GCS"
-        echo "  MAVLink ROS:   $((MAVLINK_PORT + 1)) (TCP) - For MAVROS2"
+        echo "  MAVLink ROS:   $((14550 + INSTANCE)) (UDP) - For MAVROS2"
         echo "  SITL:          $SITL_PORT (UDP) - For external simulator"
         echo "  DDS:           $DDS_PORT (UDP) - For Micro ROS Agent"
         echo ""
         echo "CONNECTIONS:"
         echo "  Mission Planner: tcp:127.0.0.1:$MAVLINK_PORT"
-        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$((MAVLINK_PORT + 1))"
+        echo "  MAVROS2: fcu_url=udp://127.0.0.1:$((14550 + INSTANCE))@"
         echo "  Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
@@ -638,13 +638,13 @@ EOF
         echo "-----------------------------------------"
         echo "PORT ASSIGNMENTS:"
         echo "  MAVLink GCS:   $MAVLINK_PORT (TCP) - For Mission Planner/GCS"
-        echo "  MAVLink ROS:   $((MAVLINK_PORT + 1)) (TCP) - For MAVROS2"
+        echo "  MAVLink ROS:   $((14550 + INSTANCE)) (UDP) - For MAVROS2"
         echo "  SITL:          $SITL_PORT (UDP) - For external simulator"
         echo "  DDS:           $DDS_PORT (UDP) - For Micro ROS Agent"
         echo ""
         echo "CONNECTIONS:"
         echo "  Mission Planner: tcp:127.0.0.1:$MAVLINK_PORT"
-        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$((MAVLINK_PORT + 1))"
+        echo "  MAVROS2: fcu_url=udp://127.0.0.1:$((14550 + INSTANCE))@"
         echo "  Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
