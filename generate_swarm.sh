@@ -365,7 +365,7 @@ EOF
 
         if [ "$${MAVPROXY_ENABLED}" = "1" ]; then
           # Use MAVProxy to create separate TCP ports for GCS and MAVROS2
-          SIM_CMD="$$SIM_CMD --master=$${MAVPROXY_MASTER} --out=$${MAVPROXY_OUT}"
+          SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
         else
           # Direct connection without MAVProxy
           SIM_CMD="$$SIM_CMD --no-mavproxy"
