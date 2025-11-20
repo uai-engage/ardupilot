@@ -390,8 +390,7 @@ EOF
 EOF
 
     # Generate MAVProxy service for this copter
-    if [ "\${COPTER${i}_MAVPROXY_ENABLED:-1}" = "1" ]; then
-        cat >> "$OUTPUT_COMPOSE" << EOF
+    cat >> "$OUTPUT_COMPOSE" << EOF
 
   mavproxy-copter-$i:
     image: ardupilot/ardupilot-dev-base:latest
@@ -435,7 +434,6 @@ EOF
           --out=\$${MAVPROXY_UDP_REMOTE} \\
           --out=\$${MAVPROXY_TCPIN_PORT}
 EOF
-    fi
 
     INSTANCE=$((INSTANCE + 1))
     SYSID=$((SYSID + 1))
@@ -592,8 +590,7 @@ EOF
 EOF
 
     # Generate MAVProxy service for this plane
-    if [ "\${PLANE${i}_MAVPROXY_ENABLED:-1}" = "1" ]; then
-        cat >> "$OUTPUT_COMPOSE" << EOF
+    cat >> "$OUTPUT_COMPOSE" << EOF
 
   mavproxy-plane-$i:
     image: ardupilot/ardupilot-dev-base:latest
@@ -637,7 +634,6 @@ EOF
           --out=\$${MAVPROXY_UDP_REMOTE} \\
           --out=\$${MAVPROXY_TCPIN_PORT}
 EOF
-    fi
 
     INSTANCE=$((INSTANCE + 1))
     SYSID=$((SYSID + 1))
@@ -793,8 +789,7 @@ EOF
 EOF
 
     # Generate MAVProxy service for this VTOL
-    if [ "\${VTOL${i}_MAVPROXY_ENABLED:-1}" = "1" ]; then
-        cat >> "$OUTPUT_COMPOSE" << EOF
+    cat >> "$OUTPUT_COMPOSE" << EOF
 
   mavproxy-vtol-$i:
     image: ardupilot/ardupilot-dev-base:latest
@@ -838,7 +833,6 @@ EOF
           --out=\$${MAVPROXY_UDP_REMOTE} \\
           --out=\$${MAVPROXY_TCPIN_PORT}
 EOF
-    fi
 
     INSTANCE=$((INSTANCE + 1))
     SYSID=$((SYSID + 1))
