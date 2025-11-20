@@ -161,8 +161,8 @@ COPTER${i}_MAVLINK_GCS_PORT=$((5760 + ($i - 1) * 10))
 COPTER${i}_MAVLINK_ROS_PORT=$((5761 + ($i - 1) * 10))
 COPTER${i}_SITL_PORT=$((5501 + ($i - 1) * 10))
 COPTER${i}_MAVPROXY_ENABLED=1
-COPTER${i}_MAVPROXY_OUT=tcpin:0.0.0.0:$((5760 + ($i - 1) * 10)),udpin:0.0.0.0:$((14550 + ($i - 1)))
-COPTER${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5501 + ($i - 1) * 10))
+COPTER${i}_MAVPROXY_OUT=tcpin:0.0.0.0:$((5761 + ($i - 1) * 10)),udpin:0.0.0.0:$((14550 + ($i - 1)))
+COPTER${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5760 + ($i - 1) * 10))
 EOF
 
     SYSID=$((SYSID + 1))
@@ -185,8 +185,8 @@ PLANE${i}_MAVLINK_GCS_PORT=$((5760 + ($VEHICLE_NUM - 1) * 10))
 PLANE${i}_MAVLINK_ROS_PORT=$((5761 + ($VEHICLE_NUM - 1) * 10))
 PLANE${i}_SITL_PORT=$((5501 + ($VEHICLE_NUM - 1) * 10))
 PLANE${i}_MAVPROXY_ENABLED=1
-PLANE${i}_MAVPROXY_OUT=tcpin:0.0.0.0:$((5760 + ($VEHICLE_NUM - 1) * 10)),udpin:0.0.0.0:$((14550 + ($VEHICLE_NUM - 1)))
-PLANE${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5501 + ($VEHICLE_NUM - 1) * 10))
+PLANE${i}_MAVPROXY_OUT=tcpin:0.0.0.0:$((5761 + ($VEHICLE_NUM - 1) * 10)),udpin:0.0.0.0:$((14550 + ($VEHICLE_NUM - 1)))
+PLANE${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5760 + ($VEHICLE_NUM - 1) * 10))
 EOF
 
     SYSID=$((SYSID + 1))
@@ -208,8 +208,8 @@ VTOL${i}_MAVLINK_GCS_PORT=$((5760 + ($VEHICLE_NUM - 1) * 10))
 VTOL${i}_MAVLINK_ROS_PORT=$((5761 + ($VEHICLE_NUM - 1) * 10))
 VTOL${i}_SITL_PORT=$((5501 + ($VEHICLE_NUM - 1) * 10))
 VTOL${i}_MAVPROXY_ENABLED=1
-VTOL${i}_MAVPROXY_OUT=tcpin:0.0.0.0:$((5760 + ($VEHICLE_NUM - 1) * 10)),udpin:0.0.0.0:$((14550 + ($VEHICLE_NUM - 1)))
-VTOL${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5501 + ($VEHICLE_NUM - 1) * 10))
+VTOL${i}_MAVPROXY_OUT=tcpin:0.0.0.0:$((5761 + ($VEHICLE_NUM - 1) * 10)),udpin:0.0.0.0:$((14550 + ($VEHICLE_NUM - 1)))
+VTOL${i}_MAVPROXY_MASTER=tcp:127.0.0.1:$((5760 + ($VEHICLE_NUM - 1) * 10))
 EOF
 
     SYSID=$((SYSID + 1))
