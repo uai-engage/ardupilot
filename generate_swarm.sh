@@ -300,8 +300,8 @@ for ((i=1; i<=NUM_COPTERS; i++)); do
       - MAVLINK_ROS_PORT=\${COPTER${i}_MAVLINK_ROS_PORT:-$((MAVLINK_PORT + 1))}
       - SITL_PORT=\${COPTER${i}_SITL_PORT:-$SITL_PORT}
       - MAVPROXY_ENABLED=\${COPTER${i}_MAVPROXY_ENABLED:-1}
-      - MAVPROXY_OUT=\${COPTER${i}_MAVPROXY_OUT:-tcpin:0.0.0.0:$MAVLINK_PORT,tcpin:0.0.0.0:$((MAVLINK_PORT + 1))}
-      - MAVPROXY_MASTER=\${COPTER${i}_MAVPROXY_MASTER:-tcp:127.0.0.1:$SITL_PORT}
+      - MAVPROXY_OUT=\${COPTER${i}_MAVPROXY_OUT:-127.0.0.1:14550}
+      - MAVPROXY_MASTER=\${COPTER${i}_MAVPROXY_MASTER:-tcp:127.0.0.1:$MAVLINK_PORT}
 EOF
 
     if [ -n "$DEPENDS_ON" ]; then
@@ -325,14 +325,14 @@ EOF
         echo "ArduPilot Copter $i (Instance $INSTANCE, SYSID $SYSID)"
         echo "-----------------------------------------"
         echo "PORT ASSIGNMENTS:"
-        echo "  MAVLink GCS:   $MAVLINK_PORT (TCP) - For Mission Planner/GCS"
-        echo "  MAVLink ROS:   $((5761 + INSTANCE * 10)) (TCP) - For MAVROS2"
+        echo "  MAVLink:       $MAVLINK_PORT (TCP) - Mission Planner + MAVROS2"
+        echo "  MAVProxy UDP:  $((14550 + INSTANCE)) (UDP) - Monitoring output"
         echo "  SITL:          $SITL_PORT (UDP) - For external simulator"
         echo "  DDS:           $DDS_PORT (UDP) - For Micro ROS Agent"
         echo ""
         echo "CONNECTIONS:"
         echo "  Mission Planner: tcp:127.0.0.1:$MAVLINK_PORT"
-        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$((5761 + INSTANCE * 10))"
+        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$MAVLINK_PORT"
         echo "  Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
@@ -364,7 +364,7 @@ EOF
         SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduCopter --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
 
         if [ "$${MAVPROXY_ENABLED}" = "1" ]; then
-          # Use MAVProxy to create separate TCP ports for GCS and MAVROS2
+          # Add UDP output for monitoring/logging (GCS and MAVROS2 connect directly to ArduPilot TCP server)
           SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
         else
           # Direct connection without MAVProxy
@@ -457,8 +457,8 @@ for ((i=1; i<=NUM_PLANES; i++)); do
       - MAVLINK_ROS_PORT=\${PLANE${i}_MAVLINK_ROS_PORT:-$((MAVLINK_PORT + 1))}
       - SITL_PORT=\${PLANE${i}_SITL_PORT:-$SITL_PORT}
       - MAVPROXY_ENABLED=\${PLANE${i}_MAVPROXY_ENABLED:-1}
-      - MAVPROXY_OUT=\${PLANE${i}_MAVPROXY_OUT:-tcpin:0.0.0.0:$MAVLINK_PORT,tcpin:0.0.0.0:$((MAVLINK_PORT + 1))}
-      - MAVPROXY_MASTER=\${PLANE${i}_MAVPROXY_MASTER:-tcp:127.0.0.0:$SITL_PORT}
+      - MAVPROXY_OUT=\${PLANE${i}_MAVPROXY_OUT:-127.0.0.1:14550}
+      - MAVPROXY_MASTER=\${PLANE${i}_MAVPROXY_MASTER:-tcp:127.0.0.1:$MAVLINK_PORT}
 EOF
 
     if [ -n "$DEPENDS_ON" ]; then
@@ -482,14 +482,14 @@ EOF
         echo "ArduPilot Plane $i (Instance $INSTANCE, SYSID $SYSID)"
         echo "-----------------------------------------"
         echo "PORT ASSIGNMENTS:"
-        echo "  MAVLink GCS:   $MAVLINK_PORT (TCP) - For Mission Planner/GCS"
-        echo "  MAVLink ROS:   $((5761 + INSTANCE * 10)) (TCP) - For MAVROS2"
+        echo "  MAVLink:       $MAVLINK_PORT (TCP) - Mission Planner + MAVROS2"
+        echo "  MAVProxy UDP:  $((14550 + INSTANCE)) (UDP) - Monitoring output"
         echo "  SITL:          $SITL_PORT (UDP) - For external simulator"
         echo "  DDS:           $DDS_PORT (UDP) - For Micro ROS Agent"
         echo ""
         echo "CONNECTIONS:"
         echo "  Mission Planner: tcp:127.0.0.1:$MAVLINK_PORT"
-        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$((5761 + INSTANCE * 10))"
+        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$MAVLINK_PORT"
         echo "  Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
@@ -612,8 +612,8 @@ for ((i=1; i<=NUM_VTOLS; i++)); do
       - MAVLINK_ROS_PORT=\${VTOL${i}_MAVLINK_ROS_PORT:-$((MAVLINK_PORT + 1))}
       - SITL_PORT=\${VTOL${i}_SITL_PORT:-$SITL_PORT}
       - MAVPROXY_ENABLED=\${VTOL${i}_MAVPROXY_ENABLED:-1}
-      - MAVPROXY_OUT=\${VTOL${i}_MAVPROXY_OUT:-tcpin:0.0.0.0:$MAVLINK_PORT,tcpin:0.0.0.0:$((MAVLINK_PORT + 1))}
-      - MAVPROXY_MASTER=\${VTOL${i}_MAVPROXY_MASTER:-tcp:127.0.0.1:$SITL_PORT}
+      - MAVPROXY_OUT=\${VTOL${i}_MAVPROXY_OUT:-127.0.0.1:14550}
+      - MAVPROXY_MASTER=\${VTOL${i}_MAVPROXY_MASTER:-tcp:127.0.0.1:$MAVLINK_PORT}
 EOF
 
     if [ -n "$DEPENDS_ON" ]; then
@@ -637,14 +637,14 @@ EOF
         echo "ArduPilot VTOL $i (Instance $INSTANCE, SYSID $SYSID)"
         echo "-----------------------------------------"
         echo "PORT ASSIGNMENTS:"
-        echo "  MAVLink GCS:   $MAVLINK_PORT (TCP) - For Mission Planner/GCS"
-        echo "  MAVLink ROS:   $((5761 + INSTANCE * 10)) (TCP) - For MAVROS2"
+        echo "  MAVLink:       $MAVLINK_PORT (TCP) - Mission Planner + MAVROS2"
+        echo "  MAVProxy UDP:  $((14550 + INSTANCE)) (UDP) - Monitoring output"
         echo "  SITL:          $SITL_PORT (UDP) - For external simulator"
         echo "  DDS:           $DDS_PORT (UDP) - For Micro ROS Agent"
         echo ""
         echo "CONNECTIONS:"
         echo "  Mission Planner: tcp:127.0.0.1:$MAVLINK_PORT"
-        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$((5761 + INSTANCE * 10))"
+        echo "  MAVROS2: fcu_url=tcp://127.0.0.1:$MAVLINK_PORT"
         echo "  Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
