@@ -413,8 +413,6 @@ EOF
     network_mode: host
     tty: true
     stdin_open: true
-    depends_on:
-      - copter-$i
     environment:
       - MAVLINK_GCS_PORT=\${COPTER${i}_MAVLINK_GCS_PORT:-$MAVLINK_PORT}
       - MAVPROXY_UDP_LOCAL=\${COPTER${i}_MAVPROXY_UDP_LOCAL:-udp:127.0.0.1:14550}
@@ -620,8 +618,6 @@ EOF
     network_mode: host
     tty: true
     stdin_open: true
-    depends_on:
-      - plane-$i
     environment:
       - MAVLINK_GCS_PORT=\${PLANE${i}_MAVLINK_GCS_PORT:-$MAVLINK_PORT}
       - MAVPROXY_UDP_LOCAL=\${PLANE${i}_MAVPROXY_UDP_LOCAL:-udp:127.0.0.1:14550}
@@ -826,8 +822,6 @@ EOF
     network_mode: host
     tty: true
     stdin_open: true
-    depends_on:
-      - vtol-$i
     environment:
       - MAVLINK_GCS_PORT=\${VTOL${i}_MAVLINK_GCS_PORT:-$MAVLINK_PORT}
       - MAVPROXY_UDP_LOCAL=\${VTOL${i}_MAVPROXY_UDP_LOCAL:-udp:127.0.0.1:14550}
