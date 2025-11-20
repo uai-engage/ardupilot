@@ -407,6 +407,9 @@ EOF
     entrypoint: ["/bin/bash", "-c"]
     command:
       - |
+        set -e
+        source /home/ardupilot/.ardupilot_env
+
         echo "========================================="
         echo "MAVProxy for Copter $i"
         echo "-----------------------------------------"
@@ -608,6 +611,9 @@ EOF
     entrypoint: ["/bin/bash", "-c"]
     command:
       - |
+        set -e
+        source /home/ardupilot/.ardupilot_env
+
         echo "========================================="
         echo "MAVProxy for Plane $i"
         echo "-----------------------------------------"
@@ -808,6 +814,9 @@ EOF
     entrypoint: ["/bin/bash", "-c"]
     command:
       - |
+        set -e
+        source /home/ardupilot/.ardupilot_env
+
         echo "========================================="
         echo "MAVProxy for VTOL $i"
         echo "-----------------------------------------"
