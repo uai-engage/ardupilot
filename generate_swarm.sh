@@ -427,16 +427,16 @@ EOF
 
         echo "Starting MAVProxy..."
         echo "  Master:      tcp:127.0.0.1:$MAVLINK_PORT"
-        echo "  UDP Local:   \$${MAVPROXY_UDP_LOCAL}"
-        echo "  UDP Remote:  \$${MAVPROXY_UDP_REMOTE}"
-        echo "  TCP Server:  \$${MAVPROXY_TCPIN_PORT}"
+        echo "  UDP Local:   \$\${MAVPROXY_UDP_LOCAL}"
+        echo "  UDP Remote:  \$\${MAVPROXY_UDP_REMOTE}"
+        echo "  TCP Server:  \$\${MAVPROXY_TCPIN_PORT}"
         echo "========================================="
 
         exec mavproxy.py \\
           --master=tcp:127.0.0.1:$MAVLINK_PORT \\
-          --out=\$${MAVPROXY_UDP_LOCAL} \\
-          --out=\$${MAVPROXY_UDP_REMOTE} \\
-          --out=\$${MAVPROXY_TCPIN_PORT}
+          --out=\$\${MAVPROXY_UDP_LOCAL} \\
+          --out=\$\${MAVPROXY_UDP_REMOTE} \\
+          --out=\$\${MAVPROXY_TCPIN_PORT}
 EOF
 
     INSTANCE=$((INSTANCE + 1))
@@ -631,16 +631,16 @@ EOF
 
         echo "Starting MAVProxy..."
         echo "  Master:      tcp:127.0.0.1:$MAVLINK_PORT"
-        echo "  UDP Local:   \$${MAVPROXY_UDP_LOCAL}"
-        echo "  UDP Remote:  \$${MAVPROXY_UDP_REMOTE}"
-        echo "  TCP Server:  \$${MAVPROXY_TCPIN_PORT}"
+        echo "  UDP Local:   \$\${MAVPROXY_UDP_LOCAL}"
+        echo "  UDP Remote:  \$\${MAVPROXY_UDP_REMOTE}"
+        echo "  TCP Server:  \$\${MAVPROXY_TCPIN_PORT}"
         echo "========================================="
 
         exec mavproxy.py \\
           --master=tcp:127.0.0.1:$MAVLINK_PORT \\
-          --out=\$${MAVPROXY_UDP_LOCAL} \\
-          --out=\$${MAVPROXY_UDP_REMOTE} \\
-          --out=\$${MAVPROXY_TCPIN_PORT}
+          --out=\$\${MAVPROXY_UDP_LOCAL} \\
+          --out=\$\${MAVPROXY_UDP_REMOTE} \\
+          --out=\$\${MAVPROXY_TCPIN_PORT}
 EOF
 
     INSTANCE=$((INSTANCE + 1))
@@ -834,16 +834,16 @@ EOF
 
         echo "Starting MAVProxy..."
         echo "  Master:      tcp:127.0.0.1:$MAVLINK_PORT"
-        echo "  UDP Local:   \$${MAVPROXY_UDP_LOCAL}"
-        echo "  UDP Remote:  \$${MAVPROXY_UDP_REMOTE}"
-        echo "  TCP Server:  \$${MAVPROXY_TCPIN_PORT}"
+        echo "  UDP Local:   \$\${MAVPROXY_UDP_LOCAL}"
+        echo "  UDP Remote:  \$\${MAVPROXY_UDP_REMOTE}"
+        echo "  TCP Server:  \$\${MAVPROXY_TCPIN_PORT}"
         echo "========================================="
 
         exec mavproxy.py \\
           --master=tcp:127.0.0.1:$MAVLINK_PORT \\
-          --out=\$${MAVPROXY_UDP_LOCAL} \\
-          --out=\$${MAVPROXY_UDP_REMOTE} \\
-          --out=\$${MAVPROXY_TCPIN_PORT}
+          --out=\$\${MAVPROXY_UDP_LOCAL} \\
+          --out=\$\${MAVPROXY_UDP_REMOTE} \\
+          --out=\$\${MAVPROXY_TCPIN_PORT}
 EOF
 
     INSTANCE=$((INSTANCE + 1))
