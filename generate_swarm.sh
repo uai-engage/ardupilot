@@ -270,6 +270,7 @@ for ((i=1; i<=NUM_COPTERS; i++)); do
         SKIP_AP_COV_ENV: 1
         SKIP_AP_GIT_CHECK: 1
         DO_AP_STM_ENV: 0
+    image: ardupilot-copter-$i:latest
     container_name: ardupilot-copter-$i
     network_mode: host
     working_dir: /ardupilot
@@ -393,17 +394,7 @@ EOF
     cat >> "$OUTPUT_COMPOSE" << EOF
 
   mavproxy-copter-$i:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        BASE_IMAGE: ubuntu
-        TAG: "22.04"
-        SKIP_AP_GRAPHIC_ENV: 1
-        SKIP_AP_EXT_ENV: 0
-        SKIP_AP_COV_ENV: 1
-        SKIP_AP_GIT_CHECK: 1
-        DO_AP_STM_ENV: 0
+    image: ardupilot-copter-$i:latest
     container_name: mavproxy-copter-$i
     network_mode: host
     depends_on:
@@ -483,6 +474,7 @@ for ((i=1; i<=NUM_PLANES; i++)); do
         SKIP_AP_COV_ENV: 1
         SKIP_AP_GIT_CHECK: 1
         DO_AP_STM_ENV: 0
+    image: ardupilot-plane-$i:latest
     container_name: ardupilot-plane-$i
     network_mode: host
     working_dir: /ardupilot
@@ -603,17 +595,7 @@ EOF
     cat >> "$OUTPUT_COMPOSE" << EOF
 
   mavproxy-plane-$i:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        BASE_IMAGE: ubuntu
-        TAG: "22.04"
-        SKIP_AP_GRAPHIC_ENV: 1
-        SKIP_AP_EXT_ENV: 0
-        SKIP_AP_COV_ENV: 1
-        SKIP_AP_GIT_CHECK: 1
-        DO_AP_STM_ENV: 0
+    image: ardupilot-plane-$i:latest
     container_name: mavproxy-plane-$i
     network_mode: host
     depends_on:
@@ -693,6 +675,7 @@ for ((i=1; i<=NUM_VTOLS; i++)); do
         SKIP_AP_COV_ENV: 1
         SKIP_AP_GIT_CHECK: 1
         DO_AP_STM_ENV: 0
+    image: ardupilot-vtol-$i:latest
     container_name: ardupilot-vtol-$i
     network_mode: host
     working_dir: /ardupilot
@@ -812,17 +795,7 @@ EOF
     cat >> "$OUTPUT_COMPOSE" << EOF
 
   mavproxy-vtol-$i:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        BASE_IMAGE: ubuntu
-        TAG: "22.04"
-        SKIP_AP_GRAPHIC_ENV: 1
-        SKIP_AP_EXT_ENV: 0
-        SKIP_AP_COV_ENV: 1
-        SKIP_AP_GIT_CHECK: 1
-        DO_AP_STM_ENV: 0
+    image: ardupilot-vtol-$i:latest
     container_name: mavproxy-vtol-$i
     network_mode: host
     depends_on:
