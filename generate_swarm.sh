@@ -411,6 +411,10 @@ EOF
     image: ardupilot-copter-$i:latest
     container_name: mavproxy-copter-$i
     network_mode: host
+    tty: true
+    stdin_open: true
+    depends_on:
+      - copter-$i
     environment:
       - MAVLINK_GCS_PORT=\${COPTER${i}_MAVLINK_GCS_PORT:-$MAVLINK_PORT}
       - MAVPROXY_UDP_LOCAL=\${COPTER${i}_MAVPROXY_UDP_LOCAL:-udp:127.0.0.1:14550}
@@ -612,6 +616,10 @@ EOF
 
   mavproxy-plane-$i:
     image: ardupilot-plane-$i:latest
+    container_name: mavproxy-plane-$i
+    network_mode: host
+    tty: true
+    stdin_open: true
     depends_on:
       - plane-$i
     environment:
@@ -812,8 +820,12 @@ EOF
     # Generate MAVProxy service for this VTOL
     cat >> "$OUTPUT_MAVPROXY" << EOF
 
+  mavproxy-vtol-$i:
+    image: ardupilot-vtol-$i:latest
     container_name: mavproxy-vtol-$i
     network_mode: host
+    tty: true
+    stdin_open: true
     depends_on:
       - vtol-$i
     environment:
