@@ -11,7 +11,8 @@ NUM_COPTERS=0
 NUM_PLANES=0
 NUM_VTOLS=0
 AUTO_START=false
-OUTPUT_COMPOSE="docker-compose-generated.yml"
+OUTPUT_ARDUPILOT="docker-compose-ardupilot.yml"
+OUTPUT_MAVPROXY="docker-compose-mavproxy.yml"
 OUTPUT_ENV=".env.generated"
 
 # Colors for output
@@ -222,14 +223,27 @@ done
 echo -e "${GREEN}✓ Generated $OUTPUT_ENV${NC}"
 echo ""
 
-# Generate docker-compose.yml
-echo -e "${YELLOW}Generating $OUTPUT_COMPOSE...${NC}"
+# Generate ArduPilot docker-compose.yml
+echo -e "${YELLOW}Generating $OUTPUT_ARDUPILOT...${NC}"
 
-cat > "$OUTPUT_COMPOSE" << 'EOF'
+cat > "$OUTPUT_ARDUPILOT" << 'EOF'
 version: '3.8'
 
-# ArduPilot Multi-Vehicle Swarm - Auto-Generated
+# ArduPilot SITL Services - Auto-Generated
 # DO NOT EDIT MANUALLY - Use generate_swarm.sh to regenerate
+
+services:
+EOF
+
+# Generate MAVProxy docker-compose.yml
+echo -e "${YELLOW}Generating $OUTPUT_MAVPROXY...${NC}"
+
+cat > "$OUTPUT_MAVPROXY" << 'EOF'
+version: '3.8'
+
+# MAVProxy Services - Auto-Generated
+# DO NOT EDIT MANUALLY - Use generate_swarm.sh to regenerate
+# NOTE: Start ArduPilot services first before starting MAVProxy
 
 services:
 EOF
@@ -256,7 +270,7 @@ for ((i=1; i<=NUM_COPTERS; i++)); do
         DEPENDS_ON="copter-1"
     fi
 
-    cat >> "$OUTPUT_COMPOSE" << EOF
+    cat >> "$OUTPUT_ARDUPILOT" << EOF
 
   copter-$i:
     build:
@@ -311,13 +325,13 @@ for ((i=1; i<=NUM_COPTERS; i++)); do
 EOF
 
     if [ -n "$DEPENDS_ON" ]; then
-        cat >> "$OUTPUT_COMPOSE" << EOF
+        cat >> "$OUTPUT_ARDUPILOT" << EOF
     depends_on:
       - $DEPENDS_ON
 EOF
     fi
 
-    cat >> "$OUTPUT_COMPOSE" << 'EOF'
+    cat >> "$OUTPUT_ARDUPILOT" << 'EOF'
     entrypoint: ["/bin/bash", "-c"]
     command:
       - |
@@ -327,7 +341,7 @@ EOF
         echo "========================================="
 EOF
 
-    cat >> "$OUTPUT_COMPOSE" << EOF
+    cat >> "$OUTPUT_ARDUPILOT" << EOF
         echo "ArduPilot Copter $i (Instance $INSTANCE, SYSID $SYSID)"
         echo "-----------------------------------------"
         echo "PORT ASSIGNMENTS:"
@@ -345,7 +359,7 @@ EOF
         echo "  Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
-    cat >> "$OUTPUT_COMPOSE" << 'EOF'
+    cat >> "$OUTPUT_ARDUPILOT" << 'EOF'
         echo "========================================="
 
         PARAM_FILE="/tmp/copter$${INSTANCE}_params.parm"
@@ -391,14 +405,12 @@ EOF
 EOF
 
     # Generate MAVProxy service for this copter
-    cat >> "$OUTPUT_COMPOSE" << EOF
+    cat >> "$OUTPUT_MAVPROXY" << EOF
 
   mavproxy-copter-$i:
     image: ardupilot-copter-$i:latest
     container_name: mavproxy-copter-$i
     network_mode: host
-    depends_on:
-      - copter-$i
     environment:
       - MAVLINK_GCS_PORT=\${COPTER${i}_MAVLINK_GCS_PORT:-$MAVLINK_PORT}
       - MAVPROXY_UDP_LOCAL=\${COPTER${i}_MAVPROXY_UDP_LOCAL:-udp:127.0.0.1:14550}
@@ -463,7 +475,7 @@ for ((i=1; i<=NUM_PLANES; i++)); do
         DEPENDS_ON="plane-1"
     fi
 
-    cat >> "$OUTPUT_COMPOSE" << EOF
+    cat >> "$OUTPUT_ARDUPILOT" << EOF
 
   plane-$i:
     build:
@@ -515,13 +527,13 @@ for ((i=1; i<=NUM_PLANES; i++)); do
 EOF
 
     if [ -n "$DEPENDS_ON" ]; then
-        cat >> "$OUTPUT_COMPOSE" << EOF
+        cat >> "$OUTPUT_ARDUPILOT" << EOF
     depends_on:
       - $DEPENDS_ON
 EOF
     fi
 
-    cat >> "$OUTPUT_COMPOSE" << 'EOF'
+    cat >> "$OUTPUT_ARDUPILOT" << 'EOF'
     entrypoint: ["/bin/bash", "-c"]
     command:
       - |
@@ -531,7 +543,7 @@ EOF
         echo "========================================="
 EOF
 
-    cat >> "$OUTPUT_COMPOSE" << EOF
+    cat >> "$OUTPUT_ARDUPILOT" << EOF
         echo "ArduPilot Plane $i (Instance $INSTANCE, SYSID $SYSID)"
         echo "-----------------------------------------"
         echo "PORT ASSIGNMENTS:"
@@ -549,7 +561,7 @@ EOF
         echo "  Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
-    cat >> "$OUTPUT_COMPOSE" << 'EOF'
+    cat >> "$OUTPUT_ARDUPILOT" << 'EOF'
         echo "========================================="
 
         PARAM_FILE="/tmp/plane$${INSTANCE}_params.parm"
@@ -595,12 +607,10 @@ EOF
 EOF
 
     # Generate MAVProxy service for this plane
-    cat >> "$OUTPUT_COMPOSE" << EOF
+    cat >> "$OUTPUT_MAVPROXY" << EOF
 
   mavproxy-plane-$i:
     image: ardupilot-plane-$i:latest
-    container_name: mavproxy-plane-$i
-    network_mode: host
     depends_on:
       - plane-$i
     environment:
@@ -667,7 +677,7 @@ for ((i=1; i<=NUM_VTOLS; i++)); do
         DEPENDS_ON=""
     fi
 
-    cat >> "$OUTPUT_COMPOSE" << EOF
+    cat >> "$OUTPUT_ARDUPILOT" << EOF
 
   vtol-$i:
     build:
@@ -718,13 +728,13 @@ for ((i=1; i<=NUM_VTOLS; i++)); do
 EOF
 
     if [ -n "$DEPENDS_ON" ]; then
-        cat >> "$OUTPUT_COMPOSE" << EOF
+        cat >> "$OUTPUT_ARDUPILOT" << EOF
     depends_on:
       - $DEPENDS_ON
 EOF
     fi
 
-    cat >> "$OUTPUT_COMPOSE" << 'EOF'
+    cat >> "$OUTPUT_ARDUPILOT" << 'EOF'
     entrypoint: ["/bin/bash", "-c"]
     command:
       - |
@@ -734,7 +744,7 @@ EOF
         echo "========================================="
 EOF
 
-    cat >> "$OUTPUT_COMPOSE" << EOF
+    cat >> "$OUTPUT_ARDUPILOT" << EOF
         echo "ArduPilot VTOL $i (Instance $INSTANCE, SYSID $SYSID)"
         echo "-----------------------------------------"
         echo "PORT ASSIGNMENTS:"
@@ -752,7 +762,7 @@ EOF
         echo "  Micro ROS Agent: ros2 run micro_ros_agent micro_ros_agent udp4 -p $DDS_PORT"
 EOF
 
-    cat >> "$OUTPUT_COMPOSE" << 'EOF'
+    cat >> "$OUTPUT_ARDUPILOT" << 'EOF'
         echo "========================================="
 
         PARAM_FILE="/tmp/vtol$${INSTANCE}_params.parm"
@@ -798,10 +808,8 @@ EOF
 EOF
 
     # Generate MAVProxy service for this VTOL
-    cat >> "$OUTPUT_COMPOSE" << EOF
+    cat >> "$OUTPUT_MAVPROXY" << EOF
 
-  mavproxy-vtol-$i:
-    image: ardupilot-vtol-$i:latest
     container_name: mavproxy-vtol-$i
     network_mode: host
     depends_on:
@@ -851,33 +859,34 @@ EOF
 done
 
 # Add volumes section
-cat >> "$OUTPUT_COMPOSE" << EOF
+cat >> "$OUTPUT_ARDUPILOT" << EOF
 
 volumes:
 EOF
 
 for ((i=1; i<=NUM_COPTERS; i++)); do
-    cat >> "$OUTPUT_COMPOSE" << EOF
+    cat >> "$OUTPUT_ARDUPILOT" << EOF
   copter-$i-eeprom:
     driver: local
 EOF
 done
 
 for ((i=1; i<=NUM_PLANES; i++)); do
-    cat >> "$OUTPUT_COMPOSE" << EOF
+    cat >> "$OUTPUT_ARDUPILOT" << EOF
   plane-$i-eeprom:
     driver: local
 EOF
 done
 
 for ((i=1; i<=NUM_VTOLS; i++)); do
-    cat >> "$OUTPUT_COMPOSE" << EOF
+    cat >> "$OUTPUT_ARDUPILOT" << EOF
   vtol-$i-eeprom:
     driver: local
 EOF
 done
 
-echo -e "${GREEN}✓ Generated $OUTPUT_COMPOSE${NC}"
+echo -e "${GREEN}✓ Generated $OUTPUT_ARDUPILOT${NC}"
+echo -e "${GREEN}✓ Generated $OUTPUT_MAVPROXY${NC}"
 echo ""
 
 # Print summary
@@ -886,7 +895,8 @@ echo -e "${GREEN}Generation Complete!${NC}"
 echo -e "${BLUE}=========================================${NC}"
 echo ""
 echo -e "${YELLOW}Generated files:${NC}"
-echo -e "  - $OUTPUT_COMPOSE"
+echo -e "  - $OUTPUT_ARDUPILOT (ArduPilot SITL services)"
+echo -e "  - $OUTPUT_MAVPROXY (MAVProxy services)"
 echo -e "  - $OUTPUT_ENV"
 echo -e "  - sitl_logs/ (with subdirectories for each vehicle)"
 echo ""
@@ -954,13 +964,27 @@ for ((i=1; i<=NUM_VTOLS; i++)); do
     TERMINAL_NUM=$((TERMINAL_NUM + 1))
 done
 
-echo -e "  2. Start the swarm (in a new terminal):"
-echo -e "     ${GREEN}docker compose -f $OUTPUT_COMPOSE --env-file $OUTPUT_ENV up${NC}"
+echo -e "  2. Start ArduPilot SITL services (in a new terminal):"
+echo -e "     ${GREEN}docker compose -f $OUTPUT_ARDUPILOT --env-file $OUTPUT_ENV up${NC}"
+echo ""
+echo -e "  3. Start MAVProxy services (in another terminal, after ArduPilot starts):"
+echo -e "     ${GREEN}docker compose -f $OUTPUT_MAVPROXY --env-file $OUTPUT_ENV up${NC}"
+echo ""
+echo -e "  ${YELLOW}OR start both together in the background:${NC}"
+echo -e "     ${GREEN}docker compose -f $OUTPUT_ARDUPILOT --env-file $OUTPUT_ENV up -d${NC}"
+echo -e "     ${GREEN}docker compose -f $OUTPUT_MAVPROXY --env-file $OUTPUT_ENV up${NC}"
 echo ""
 
 # Auto-start if requested
 if [ "$AUTO_START" = true ]; then
     echo -e "${YELLOW}Auto-starting swarm...${NC}"
     echo ""
-    docker compose -f "$OUTPUT_COMPOSE" --env-file "$OUTPUT_ENV" up
+    echo -e "Starting ArduPilot SITL services in background..."
+    docker compose -f "$OUTPUT_ARDUPILOT" --env-file "$OUTPUT_ENV" up -d
+    echo ""
+    echo -e "Waiting 10 seconds for ArduPilot to initialize..."
+    sleep 10
+    echo ""
+    echo -e "Starting MAVProxy services..."
+    docker compose -f "$OUTPUT_MAVPROXY" --env-file "$OUTPUT_ENV" up
 fi
