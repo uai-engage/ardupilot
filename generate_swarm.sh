@@ -369,15 +369,8 @@ EOF
           ./waf copter
         fi
 
-        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduCopter --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
-
-        if [ "$${MAVPROXY_ENABLED}" = "1" ]; then
-          # MAVProxy with multiple outputs: local UDP, remote UDP, and TCP server for incoming connections
-          SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_UDP_LOCAL} --out=$${MAVPROXY_UDP_REMOTE} --out=$${MAVPROXY_TCPIN_PORT}"
-        else
-          # Direct connection without MAVProxy
-          SIM_CMD="$$SIM_CMD --no-mavproxy"
-        fi
+        # Run ArduPilot without MAVProxy (MAVProxy will run in separate container)
+        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduCopter --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
 
         if [ -n "$${HOME_LOCATION}" ]; then
           SIM_CMD="$$SIM_CMD --custom-location $${HOME_LOCATION}"
@@ -395,6 +388,54 @@ EOF
 
         exec $$SIM_CMD
 EOF
+
+    # Generate MAVProxy service for this copter
+    if [ "\${COPTER${i}_MAVPROXY_ENABLED:-1}" = "1" ]; then
+        cat >> "$OUTPUT_COMPOSE" << EOF
+
+  mavproxy-copter-$i:
+    image: ardupilot/ardupilot-dev-base:latest
+    container_name: mavproxy-copter-$i
+    network_mode: host
+    depends_on:
+      - copter-$i
+    environment:
+      - MAVLINK_GCS_PORT=\${COPTER${i}_MAVLINK_GCS_PORT:-$MAVLINK_PORT}
+      - MAVPROXY_UDP_LOCAL=\${COPTER${i}_MAVPROXY_UDP_LOCAL:-udp:127.0.0.1:14550}
+      - MAVPROXY_UDP_REMOTE=\${COPTER${i}_MAVPROXY_UDP_REMOTE:-udp:10.200.10.20:14550}
+      - MAVPROXY_TCPIN_PORT=\${COPTER${i}_MAVPROXY_TCPIN_PORT:-tcpin:0.0.0.0:5766}
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo "========================================="
+        echo "MAVProxy for Copter $i"
+        echo "-----------------------------------------"
+        echo "Waiting for ArduPilot on port $MAVLINK_PORT..."
+
+        # Wait for ArduPilot TCP port to be available
+        for i in {1..30}; do
+          if timeout 1 bash -c "cat < /dev/null > /dev/tcp/127.0.0.1/$MAVLINK_PORT" 2>/dev/null; then
+            echo "ArduPilot is ready on port $MAVLINK_PORT"
+            break
+          fi
+          echo "Waiting for ArduPilot... (attempt \$i/30)"
+          sleep 2
+        done
+
+        echo "Starting MAVProxy..."
+        echo "  Master:      tcp:127.0.0.1:$MAVLINK_PORT"
+        echo "  UDP Local:   \$${MAVPROXY_UDP_LOCAL}"
+        echo "  UDP Remote:  \$${MAVPROXY_UDP_REMOTE}"
+        echo "  TCP Server:  \$${MAVPROXY_TCPIN_PORT}"
+        echo "========================================="
+
+        exec mavproxy.py \\
+          --master=tcp:127.0.0.1:$MAVLINK_PORT \\
+          --out=\$${MAVPROXY_UDP_LOCAL} \\
+          --out=\$${MAVPROXY_UDP_REMOTE} \\
+          --out=\$${MAVPROXY_TCPIN_PORT}
+EOF
+    fi
 
     INSTANCE=$((INSTANCE + 1))
     SYSID=$((SYSID + 1))
@@ -530,14 +571,8 @@ EOF
           ./waf plane
         fi
 
-        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
-
-        if [ "$${MAVPROXY_ENABLED}" = "0" ]; then
-          # Use MAVProxy to create separate TCP ports for GCS and MAVROS2
-          SIM_CMD="$$SIM_CMD --no-mavproxy --out=tcpin:0.0.0.0:$${MAVLINK_GCS_PORT},tcpin:0.0.0.0:$${MAVLINK_ROS_PORT}"
-        else
-          SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
-        fi
+        # Run ArduPilot without MAVProxy (MAVProxy will run in separate container)
+        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
 
         if [ -n "$${HOME_LOCATION}" ]; then
           SIM_CMD="$$SIM_CMD --custom-location $${HOME_LOCATION}"
@@ -555,6 +590,54 @@ EOF
 
         exec $$SIM_CMD
 EOF
+
+    # Generate MAVProxy service for this plane
+    if [ "\${PLANE${i}_MAVPROXY_ENABLED:-1}" = "1" ]; then
+        cat >> "$OUTPUT_COMPOSE" << EOF
+
+  mavproxy-plane-$i:
+    image: ardupilot/ardupilot-dev-base:latest
+    container_name: mavproxy-plane-$i
+    network_mode: host
+    depends_on:
+      - plane-$i
+    environment:
+      - MAVLINK_GCS_PORT=\${PLANE${i}_MAVLINK_GCS_PORT:-$MAVLINK_PORT}
+      - MAVPROXY_UDP_LOCAL=\${PLANE${i}_MAVPROXY_UDP_LOCAL:-udp:127.0.0.1:14550}
+      - MAVPROXY_UDP_REMOTE=\${PLANE${i}_MAVPROXY_UDP_REMOTE:-udp:10.200.10.20:14550}
+      - MAVPROXY_TCPIN_PORT=\${PLANE${i}_MAVPROXY_TCPIN_PORT:-tcpin:0.0.0.0:5766}
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo "========================================="
+        echo "MAVProxy for Plane $i"
+        echo "-----------------------------------------"
+        echo "Waiting for ArduPilot on port $MAVLINK_PORT..."
+
+        # Wait for ArduPilot TCP port to be available
+        for i in {1..30}; do
+          if timeout 1 bash -c "cat < /dev/null > /dev/tcp/127.0.0.1/$MAVLINK_PORT" 2>/dev/null; then
+            echo "ArduPilot is ready on port $MAVLINK_PORT"
+            break
+          fi
+          echo "Waiting for ArduPilot... (attempt \$i/30)"
+          sleep 2
+        done
+
+        echo "Starting MAVProxy..."
+        echo "  Master:      tcp:127.0.0.1:$MAVLINK_PORT"
+        echo "  UDP Local:   \$${MAVPROXY_UDP_LOCAL}"
+        echo "  UDP Remote:  \$${MAVPROXY_UDP_REMOTE}"
+        echo "  TCP Server:  \$${MAVPROXY_TCPIN_PORT}"
+        echo "========================================="
+
+        exec mavproxy.py \\
+          --master=tcp:127.0.0.1:$MAVLINK_PORT \\
+          --out=\$${MAVPROXY_UDP_LOCAL} \\
+          --out=\$${MAVPROXY_UDP_REMOTE} \\
+          --out=\$${MAVPROXY_TCPIN_PORT}
+EOF
+    fi
 
     INSTANCE=$((INSTANCE + 1))
     SYSID=$((SYSID + 1))
@@ -689,14 +772,8 @@ EOF
           ./waf plane
         fi
 
-        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS"
-
-        if [ "$${MAVPROXY_ENABLED}" = "0" ]; then
-          # Use MAVProxy to create separate TCP ports for GCS and MAVROS2
-          SIM_CMD="$$SIM_CMD --no-mavproxy --out=tcpin:0.0.0.0:$${MAVLINK_GCS_PORT},tcpin:0.0.0.0:$${MAVLINK_ROS_PORT}"
-        else
-          SIM_CMD="$$SIM_CMD --out=$${MAVPROXY_OUT}"
-        fi
+        # Run ArduPilot without MAVProxy (MAVProxy will run in separate container)
+        SIM_CMD="python3 Tools/autotest/sim_vehicle.py -v ArduPlane --model $${MODEL} --speedup $${SPEEDUP} --instance $${INSTANCE} --sim-address=$${SIM_ADDRESS} --add-param-file $$PARAM_FILE --enable-DDS --no-mavproxy"
 
         if [ -n "$${HOME_LOCATION}" ]; then
           SIM_CMD="$$SIM_CMD --custom-location $${HOME_LOCATION}"
@@ -714,6 +791,54 @@ EOF
 
         exec $$SIM_CMD
 EOF
+
+    # Generate MAVProxy service for this VTOL
+    if [ "\${VTOL${i}_MAVPROXY_ENABLED:-1}" = "1" ]; then
+        cat >> "$OUTPUT_COMPOSE" << EOF
+
+  mavproxy-vtol-$i:
+    image: ardupilot/ardupilot-dev-base:latest
+    container_name: mavproxy-vtol-$i
+    network_mode: host
+    depends_on:
+      - vtol-$i
+    environment:
+      - MAVLINK_GCS_PORT=\${VTOL${i}_MAVLINK_GCS_PORT:-$MAVLINK_PORT}
+      - MAVPROXY_UDP_LOCAL=\${VTOL${i}_MAVPROXY_UDP_LOCAL:-udp:127.0.0.1:14550}
+      - MAVPROXY_UDP_REMOTE=\${VTOL${i}_MAVPROXY_UDP_REMOTE:-udp:10.200.10.20:14550}
+      - MAVPROXY_TCPIN_PORT=\${VTOL${i}_MAVPROXY_TCPIN_PORT:-tcpin:0.0.0.0:5766}
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo "========================================="
+        echo "MAVProxy for VTOL $i"
+        echo "-----------------------------------------"
+        echo "Waiting for ArduPilot on port $MAVLINK_PORT..."
+
+        # Wait for ArduPilot TCP port to be available
+        for i in {1..30}; do
+          if timeout 1 bash -c "cat < /dev/null > /dev/tcp/127.0.0.1/$MAVLINK_PORT" 2>/dev/null; then
+            echo "ArduPilot is ready on port $MAVLINK_PORT"
+            break
+          fi
+          echo "Waiting for ArduPilot... (attempt \$i/30)"
+          sleep 2
+        done
+
+        echo "Starting MAVProxy..."
+        echo "  Master:      tcp:127.0.0.1:$MAVLINK_PORT"
+        echo "  UDP Local:   \$${MAVPROXY_UDP_LOCAL}"
+        echo "  UDP Remote:  \$${MAVPROXY_UDP_REMOTE}"
+        echo "  TCP Server:  \$${MAVPROXY_TCPIN_PORT}"
+        echo "========================================="
+
+        exec mavproxy.py \\
+          --master=tcp:127.0.0.1:$MAVLINK_PORT \\
+          --out=\$${MAVPROXY_UDP_LOCAL} \\
+          --out=\$${MAVPROXY_UDP_REMOTE} \\
+          --out=\$${MAVPROXY_TCPIN_PORT}
+EOF
+    fi
 
     INSTANCE=$((INSTANCE + 1))
     SYSID=$((SYSID + 1))
