@@ -393,7 +393,17 @@ EOF
     cat >> "$OUTPUT_COMPOSE" << EOF
 
   mavproxy-copter-$i:
-    image: ardupilot/ardupilot-dev-base:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: ubuntu
+        TAG: "22.04"
+        SKIP_AP_GRAPHIC_ENV: 1
+        SKIP_AP_EXT_ENV: 0
+        SKIP_AP_COV_ENV: 1
+        SKIP_AP_GIT_CHECK: 1
+        DO_AP_STM_ENV: 0
     container_name: mavproxy-copter-$i
     network_mode: host
     depends_on:
@@ -593,7 +603,17 @@ EOF
     cat >> "$OUTPUT_COMPOSE" << EOF
 
   mavproxy-plane-$i:
-    image: ardupilot/ardupilot-dev-base:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: ubuntu
+        TAG: "22.04"
+        SKIP_AP_GRAPHIC_ENV: 1
+        SKIP_AP_EXT_ENV: 0
+        SKIP_AP_COV_ENV: 1
+        SKIP_AP_GIT_CHECK: 1
+        DO_AP_STM_ENV: 0
     container_name: mavproxy-plane-$i
     network_mode: host
     depends_on:
@@ -792,7 +812,17 @@ EOF
     cat >> "$OUTPUT_COMPOSE" << EOF
 
   mavproxy-vtol-$i:
-    image: ardupilot/ardupilot-dev-base:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: ubuntu
+        TAG: "22.04"
+        SKIP_AP_GRAPHIC_ENV: 1
+        SKIP_AP_EXT_ENV: 0
+        SKIP_AP_COV_ENV: 1
+        SKIP_AP_GIT_CHECK: 1
+        DO_AP_STM_ENV: 0
     container_name: mavproxy-vtol-$i
     network_mode: host
     depends_on:
