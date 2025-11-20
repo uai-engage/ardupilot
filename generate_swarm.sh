@@ -416,8 +416,9 @@ EOF
       - MAVPROXY_UDP_LOCAL=\${COPTER${i}_MAVPROXY_UDP_LOCAL:-udp:127.0.0.1:14550}
       - MAVPROXY_UDP_REMOTE=\${COPTER${i}_MAVPROXY_UDP_REMOTE:-udp:10.200.10.20:14550}
       - MAVPROXY_TCPIN_PORT=\${COPTER${i}_MAVPROXY_TCPIN_PORT:-tcpin:0.0.0.0:5766}
-    entrypoint: ["/bin/bash", "-c"]
     command:
+      - /bin/bash
+      - -c
       - |
         set -e
         source /home/ardupilot/.ardupilot_env
@@ -618,8 +619,9 @@ EOF
       - MAVPROXY_UDP_LOCAL=\${PLANE${i}_MAVPROXY_UDP_LOCAL:-udp:127.0.0.1:14550}
       - MAVPROXY_UDP_REMOTE=\${PLANE${i}_MAVPROXY_UDP_REMOTE:-udp:10.200.10.20:14550}
       - MAVPROXY_TCPIN_PORT=\${PLANE${i}_MAVPROXY_TCPIN_PORT:-tcpin:0.0.0.0:5766}
-    entrypoint: ["/bin/bash", "-c"]
     command:
+      - /bin/bash
+      - -c
       - |
         set -e
         source /home/ardupilot/.ardupilot_env
@@ -819,8 +821,9 @@ EOF
       - MAVPROXY_UDP_LOCAL=\${VTOL${i}_MAVPROXY_UDP_LOCAL:-udp:127.0.0.1:14550}
       - MAVPROXY_UDP_REMOTE=\${VTOL${i}_MAVPROXY_UDP_REMOTE:-udp:10.200.10.20:14550}
       - MAVPROXY_TCPIN_PORT=\${VTOL${i}_MAVPROXY_TCPIN_PORT:-tcpin:0.0.0.0:5766}
-    entrypoint: ["/bin/bash", "-c"]
     command:
+      - /bin/bash
+      - -c
       - |
         set -e
         source /home/ardupilot/.ardupilot_env
